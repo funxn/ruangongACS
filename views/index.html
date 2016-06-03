@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>example</title>
+</head>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<body>
+	<div>
+		<form>
+			要发给服务器的数据：
+			<input id="txt" type="text"></input>
+			<input id="submit_temp" type="button" value="提交"></input>
+			<br>
+			<br>
+			点击以GET方式获取服务器发过来的数据：
+			<input id="get_temp" type="button" value="GET获取"></input>
+			<input id="get_content" type="text"></input>
+		</form>
+	</div>
+</body>
+<script type="text/javascript">
+	var host = "http://127.0.0.1:3000";
+	$('#submit_temp').click(function(){
+		$.post(
+			host+"/roomDo", 
+			JSON.stringify({
+				status: 0,
+				str: $('#txt').val()
+			}), 
+			function(data, textStatus, xhr) {
+				alert(JSON.parse(data));
+			}
+		);
+	});
+
+	$('#get_temp').click(function(){
+		$.get(
+			host+'/roomDo',
+			function(data, status){
+				alert(data);
+				$('#get_content').val(JSON.parse(data).str);
+			}
+		);
+	});
+</script>
+</html>
