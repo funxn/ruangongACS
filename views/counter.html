@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<style>
+	.title{
+		width: 500px;
+		height: 50px;
+		background: #8FBC8F;
+		text-align:center;
+		vertical-align:middle;
+		line-height:50px;
+		margin-left:250px;
+	}
+	.content{
+		width: 500px;
+		height: 500px;
+		background: #F5DEBC;
+		text-align:center;
+		vertical-align:middle;
+		line-height:500px;
+		margin-left:250px;
+	}
+    .content-term{
+        width: 300px;
+		height: 300px;
+		text-align:center;
+		vertical-align:middle;
+		line-height:300px;
+		margin-left:100px;	
+		padding-top:80px;
+    }
+    .content-term-cut{
+        width: 300px;
+		height: 100px;
+		background: #F5DEBC;
+		text-align:center;
+		vertical-align:middle;
+		line-height:100px;
+    }
+    .select{
+    	width: 175px;
+    	height: 21px;
+    }
+    #btnLook{
+    	width: 120px;
+    }
+</style>
+
+<body>
+	<div class="title">
+		<p>前台界面</p>
+	</div>
+	<div class="content">
+        <div class="content-term">
+            <div class="content-term-cut">	
+            	<form name="roomIdForm" action="./YourAction" method="POST" target="showPage">
+            		<b>编号:</b>
+        	    	<input id="showRoomId" type="text"/>
+        	    </form>
+            </div>
+            <div  class="content-term-cut">
+            	<b>类型:</b>
+        	    <select class="select">
+                    <option value="bill">账单</option>
+                    <option value="detail">详单</option>
+                </select>
+            </div>
+        	<div  class="content-term-cut">
+        		<input id="btnLook" type="button" onclick="btnLookClick()" value="查看"/>
+        	</div> 	
+        </div>
+	</div>
+</body>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script language=javascript>
+	function btnLookClick() {
+		var roomIdInput = window['roomIdForm'];
+		alert("已进入点击响应函数");
+		if (!roomIdInput.showRoomId.value || isNaN(roomIdInput.showRoomId.value)) {
+			alert('请输入房间编号！');
+		}
+		else if(/*验证房间编号是否正确*/0){
+
+		}
+		else {
+			//跳转页面，显示账单或详单信息
+			if ($('#select').val() == "bill") {
+				//选中账单
+			}
+			else {
+				//选中详单
+			}
+			
+		}
+	}
+</script>
+
+</html>
