@@ -8,17 +8,17 @@ var model = new Object();
 // hongdingyi:
 var SWITCHONCODE = 1;
 var SWITCHOFFCODE = 2;
-//
-model.doThing = function (){
-	var willDoSomething = "will do something";
-	return willDoSomething;
-};
+
+// 调用model:存中央空调的初始化信息
+// 中央空调初始化设置界面：mode，default_temp，min_temp, max_temp
+model.initConfig = function(data){
+
+}
 
 model.insertData = function(data){
     var promise = new mongoose.Promise();
     Room.findOne(data,function(room){
             if(room){
-                console.log(room);
                 console.log(promise.resolve(err, room));
             }
             else
@@ -33,24 +33,46 @@ model.insertData = function(data){
     return promise;
 };
 
-model.switch = function(tag, room_id){
-	if(tag>=1 && tag<=3){
+model.switch = function(data){
+    var promise = new mongoose.Promise();
+	if(data.state>=0 && data.state<=2){
 		Room.findOneAndUpdate(
-            {room_id: room_id},
-            {$set: {status: tag}},
+            {room_id: data.room_id},
+            {$set: {status: data.state}},
             {$set: {ctime: Date()}},
             {safe: true, upsert: true, new : true},
             function(err, room){
-                console.log(room);
+                console.log("switch: " + room);
                 if(room){
-                    return JSON.stringify({code: 1, user: null});                     // end函数中不能有undefined的变量，不然不会报错，且浏览器段持续                                                                   // POST error: net::ERR_EMPTY_RESPONSE
+                    promise.resolve(null, JSON.stringify({code: 1, user: null}));
                 }else{
-                    return JSON.stringify({code: 0, msg: "room not exist!"});
+                    promise.resolve(err, JSON.stringify({code: 0, msg: "room not exist!"}));
                 }
         });
 	} else{
-		return JSON.stringify({code: 0, msg: "tag 不合法"});
+		promise.resolve(err, JSON.stringify({code: 0, msg: "tag 不合法"}));
 	}
 };
+
+
+// model.set = function(data){
+//     if(data.state>=1 && data.state<=3){
+//         Room.findOneAndUpdate(
+//             {room_id: room_id},
+//             {$set: {status: tag}},
+//             {$set: {ctime: Date()}},
+//             {safe: true, upsert: true, new : true},
+//             function(err, room){
+//                 console.log(room);
+//                 if(room){
+//                     return JSON.stringify({code: 1, user: null});                     // end函数中不能有undefined的变量，不然不会报错，且浏览器段持续                                                                   // POST error: net::ERR_EMPTY_RESPONSE
+//                 }else{
+//                     return JSON.stringify({code: 0, msg: "room not exist!"});
+//                 }
+//         });
+//     } else{
+//         return JSON.stringify({code: 0, msg: "tag 不合法"});
+//     }
+// };
 
 module.exports = model;
