@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<style>
+	.title{
+		width: 1024px;
+		height: 50px;
+		background: #4169E1;
+		text-align:center;
+		vertical-align:middle;
+		line-height:50px;
+	}
+	.content{
+		width: 1024px;
+		height: 550px;
+		background: #C0C;
+	}
+	.moniSAC{
+		width: 700px;
+		height: 550px;
+		background: #D3D3D3;
+		float: left;
+	}
+	.clear{
+		width: 700px;
+		height: 35px;
+		background: #D3D3D3;
+		text-align:center;
+	}
+	.moniSAC-up{
+		width: 700px;
+		height: 275px;
+		background: #D3D3D3;
+	}
+	.moniSAC-down{
+		width: 700px;
+		height: 210px;
+		background: #D3D3D3;
+	}
+	.room1{
+        width: 300px;
+		height: 175px;
+		background: #FFFACD;
+		margin-left:25px;
+		float: left;
+	}
+	.room3{
+        width: 300px;
+		height: 175px;
+		background: #FFFACD;
+		margin-left:25px;
+		float: left;
+	}
+	.room2{
+		width: 300px;
+		height: 175px;
+		background: #FFFACD;
+		margin-left:375px;	
+	}
+	.room4{
+		width: 300px;
+		height: 175px;
+		background: #FFFACD;
+		margin-left:375px;
+	}
+	.showRoomId{
+	    width: 300px;
+		height: 30px;
+		background: #E9967A;
+		margin-left:0px;
+		text-align:center;	
+		vertical-align:middle;
+		line-height:30px;
+	}
+	.roomContent{
+		width: 260px;
+		height: 20px;
+		background: #FFFACD;
+		margin-left:40px;	
+	}
+	.roomContentTitle{
+		width: 130px;
+		height: 20px;
+		background: #FFFACD;
+		text-align:center;
+		vertical-align:middle;
+		line-height:20px;
+		float: left;
+	}
+
+	.moniCAC{
+		width: 324px;
+		height: 550px;
+		background: #FFDAB9;
+		float: right;
+	}
+	.moniCAC-up{
+		width: 324px;
+		height: 200px;
+		background: #FFDAB9;
+	}
+	.moniCAC-down{
+		width: 324px;
+		height: 300px;
+		background: #FFDAB9;
+		line-height:300px;
+	}
+	#btnCACOnOff{
+		width: 90px;
+		height: 40px;
+		background: #E9967A;
+	}
+	.cacTitle{
+		width: 324px;
+		height: 50px;
+		background: #FFDAB9;
+		text-align:center;	
+		vertical-align:middle;
+		line-height:50px;
+	}
+	.cacContent{
+		width: 324px;
+		height: 40px;
+		background: #FFDAB9;
+		vertical-align:middle;
+		line-height:40px;
+	}
+	.cacContentTitle{
+		width: 80px;
+		height: 40px;
+		background: #FFDAB9;
+		text-align:center;	
+		vertical-align:middle;
+		line-height:40px;
+		margin-left:100px;
+		float: left;
+	}
+</style>
+<body>
+	<div class="title">
+		<p>中央空调管理员</p>
+	</div>
+	<div class="content">
+		<div class="moniSAC">
+		    <div class="clear">
+		    	<p>房间空调监控</p>
+		    </div>
+		    <div class="moniSAC-up">
+		    	<div class="room1">
+			        <div class="showRoomId">
+			            <b>房间ID:</b>
+			        	<b id="room1-Id"></b>
+			        </div>
+			        <div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			                </div>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>状态:</b>
+			        	    </div>
+			        		<b id="room1-state">关机</b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>当前温度(度):</b>
+			        	    </div>
+			        		<b id="room1-currentTemp"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>风速:</b>
+			        	    </div>
+			        		<b id="room1-speed"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>目标温度(度):</b>
+			        	    </div>
+			        		<b id="room1-aimTemp"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>消费金额(元):</b>
+			        	    </div>
+			        		<b id="room1-consume"></b>
+			        	</div>
+			        </div>
+		        </div>
+		        <div class="room2">
+			        <div class="showRoomId">
+			            <b>房间ID:</b>
+			        	<b id="room2-Id"></b>
+			        </div>
+			        <div>
+			        	<div class="roomContent">		        		
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>状态:</b>
+			        	    </div>
+			        		<b id="room2-state">开机</b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>当前温度(度):</b>
+			        	    </div>
+			        		<b id="room2-currentTemp"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>风速:</b>
+			        	    </div>
+			        		<b id="room2-speed"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>目标温度(度):</b>
+			        	    </div>
+			        		<b id="room2-aimTemp"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>消费金额(元):</b>
+			        	    </div>
+			        		<b id="room2-consume"></b>
+			        	</div>
+			        </div>
+		        </div>
+		    </div>
+		    <div class="moniSAC-down">
+		    	<div class="room3">
+			        <div class="showRoomId">
+			            <b>房间ID:</b>
+			        	<b id="room3-Id"></b>
+			        </div>
+			        <div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">			    
+			                </div>			        		
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>状态:</b>
+			        	    </div>
+			        		<b id="room3-state">待机</b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>当前温度(度):</b>
+			        	    </div>
+			        		<b id="room3-currentTemp"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>风速:</b>
+			        	    </div>
+			        		<b id="room3-speed"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>目标温度(度):</b>
+			        	    </div>
+			        		<b id="room3-aimTemp"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>消费金额(元):</b>
+			        	    </div>
+			        		<b id="room3-consume"></b>
+			        	</div>
+			        </div>
+		        </div>
+		        <div class="room4">
+			        <div class="showRoomId">
+			            <b>房间ID:</b>
+			        	<b id="room4-Id"></b>
+			        </div>
+			        <div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">			            
+			                </div>			        		
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>状态:</b>
+			        	    </div>
+			        		<b id="room4-state">待机</b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>当前温度(度):</b>
+			        	    </div>
+			        		<b id="room4-currentTemp"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>风速:</b>
+			        	    </div>
+			        		<b id="room4-speed"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>目标温度(度):</b>
+			        	    </div>
+			        		<b id="room4-aimTemp"></b>
+			        	</div>
+			        	<div class="roomContent">
+			        	    <div class="roomContentTitle">
+			        	    	<b>消费金额(元):</b>
+			        	    </div>
+			        		<b id="room4-consume"></b>
+			        	</div>
+			        </div>
+		        </div>
+		    </div>
+	    </div>
+	    <div class="moniCAC">
+		    <div class="moniCAC-up">
+		        <div class="cacTitle">
+		        	<b>中央空调监控</b>
+		        </div>
+		        <div class="cacContent"></div>
+		        <div class="cacContent">
+		        	<div class="cacContentTitle">
+		    			<b>状态：</b>
+		    		</div>
+		    		<b id="cacState">关机</b>
+		        </div>
+		        <div class="cacContent">
+		    		<div class="cacContentTitle">
+		    			<b>模式：</b>
+		    		</div>
+		    		<b id="cacMode">制冷</b>
+		    	</div>
+		    	<div class="cacContent">
+		    		<div class="cacContentTitle">
+		    			<b>金额：</b>
+		    		</div>
+		    		<b id="cacCost">0.00</b>
+		    	</div>
+		    </div>
+		    <div class="moniCAC-down">
+		    	<input id="btnCACOnOff" type="button" value="开/关" />
+		    </div>
+	    </div>
+	</div>
+</body>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript">
+    //判断类型显示汉字或得到类型变量
+	function toShowMode(mode) {
+        if (mode == 0) {
+        	return '制冷';
+        }
+        else if (mode == 1) {
+        	return '制暖';
+        }
+    }
+    function toShowState(state) {
+    	if (state == 0) {
+    		return '停机';
+    	}
+    	else if(state == 1) {
+    		return '运行';
+    	}
+    	else if (state == 2) {
+    		return '待机';
+    	}
+    }
+    function toShowSpeed(speed) {
+    	if (speed == 0) {
+    		return '低风';
+    	}
+    	else if(speed == 1) {
+    		return '中风';
+    	}
+    	else if (speed == 2) {
+    		return '高风';
+    	}
+    }
+    function toGetMode(mode) {
+    	if (mode == '制冷') {
+        	return 0;
+        }
+        else if (mode == '制暖') {
+        	return 1;
+        }
+    }
+    function toGetState(showstate) {
+    	if (showstate == '停机') {
+    		return 0;
+    	}
+    	else if(showstate == '运行') {
+    		return 1;
+    	}
+    	else if (showstate == '待机') {
+    		return 2;
+    	}
+    }
+    function toGetSpeed(showspeed) {
+    	if (showspeed == '低风') {
+    		return 0;
+    	}
+    	else if(showspeed == '中风') {
+    		return 1;
+    	}
+    	else if (showspeed == '高风') {
+    		return 2;
+    	}
+    }
+</script>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+
+<style>
+    .title{
+    	width: 500px;
+    	height: 50px;
+        background: #F08080;
+		text-align:center;
+		vertical-align:middle;
+		line-height:50px;
+		margin-left:250px;
+    }
+    .content{
+        width: 500px;
+    	height: 500px;
+        background: #ADD8E6;
+		margin-left:250px;	
+    }
+    .content-center{
+        width: 300px;
+    	height: 400px;
+        background: #ADD8E6;
+		margin-left:100px;	
+		padding-top:50px;
+    }
+    .content-center-cut{
+    	width: 300px;
+    	height: 100px;
+        background: #ADD8E6;
+        text-align:center;
+		vertical-align:middle;
+		line-height:100px;
+    }
+    #model{
+    	width: 175px;
+    	height: 21px;
+    }
+    #tempLow{
+    	width: 71px;
+    }
+    #tempHigh{
+    	width: 71px;
+    }
+    #btnOK{
+    	width: 150px;
+    }
+</style>
+
+<body>
+	<div class="title">
+		<font>中央空调配置界面</font>
+	</div>	
+	<div class="content">
+		<div class="content-center"> 
+			<div class="content-center-cut">
+				<font>工作模式:</font>
+				<select id="modeSelect">
+					<option value="cold">制冷</option>
+					<option value="hot">制热</option>
+				</select>
+			</div>
+			<div class="content-center-cut">
+			    <form name="tempRangeForm" action="./YourAction" method="POST" target="showPage">
+				    <font>温控范围:</font>
+				    <input id="tempLow" type="text"/>
+				    <font>至</font>
+				    <input id="tempHigh" type="text"/>
+				</form>
+			</div>
+			<div class="content-center-cut">
+                <form name="feeForm" action="./YourAction" method="POST" target="showPage">
+				    <font>计费费率:</font>
+				    <input id="fee" type="text"/>
+                </form>
+			</div>
+			<div class="content-center-cut">
+			     <input id="btnOK" type="button" onclick="btnOKClick()" value="配置"/>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script language=javascript>
+	function btnOKClick(){
+        if (confirm("确定要设置吗？")) { 
+            var tempRangeInput = window['tempRangeForm']; 
+            var feeInput = window['feeForm'];
+            //alert("已进入点击响应函数");
+
+            if (!tempRangeInput.tempLow.value || isNaN(tempRangeInput.tempLow.value)) { 
+                alert('请输入温度下界'); 
+                tempRangeInput.focus(); 
+                return false; //返回不提交 
+            } 
+            else if(!tempRangeInput.tempHigh.value || isNaN(tempRangeInput.tempHigh.value)){
+                alert('请输入温度上界'); 
+                tempRangeInput.focus(); 
+                return false; //返回不提交   
+            }
+            else if(tempRangeInput.tempLow.value >= tempRangeInput.tempHigh.value) {
+                alert('输入范围不正确，请重新输入！');
+                tempRangeInput.focus(); 
+                return false; //返回不提交 
+            }
+            else if (!feeInput.fee.value || isNaN(feeInput.fee.value)) {
+                alert('请输入计费费率');
+                feeInput.focus(); 
+                return false; //返回不提交 
+            }
+            else {
+ 
+                //保存配置信息
+                if($('#modeSelect').val() == "cold") {
+                    //选中制冷
+                    
+                } 
+                else {
+                    //选中制暖
+
+                }
+                //保存温控范围
+                //保存计费费率
+                alert('设置成功，点击确认跳转主界面');
+                window.location.href = "cac_manager.html";
+            }
+        }
+	}
+</script>
+</html>
+
