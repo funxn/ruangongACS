@@ -23,6 +23,8 @@ roomController.post('/handshake',function(req,res){
     });
 
     console.log(postData);
+
+
     res.end(JSON.stringify({code: 1, str: "数据库查询得到的内容"}));
     //res.send(model.switchOn(handshakeData));
 });
@@ -65,7 +67,7 @@ roomController.post('/set',function(req,res){
     var setData = JSON.parse(postData);    // 解析数据？
     // 调度
     // 
-    res.send(model.set(setData));
+    res.end(model.set(setData));
 });
 
 
@@ -84,8 +86,8 @@ roomController.post('/changed',function(req,res){
     });
 
     var changedData = JSON.parse(postData);    // 解析数据？
-    
-    res.end(model.changed(changedData));
+    model.changed(changedData);
+    res.end(JSON.parse({code:"OK", obj: null}));
 });
 
 
