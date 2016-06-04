@@ -5,27 +5,50 @@
         <title>Document</title>
     </head>
     <script type="text/javascript" src="../public/js/jquery.js"></script>
+    <script type="text/javascript" src="../../client/socket.io.js"></script>
     <body>
     <form action="">
         <input id="btn" type="button" value="test">
     </form>
     </body>
+    <script>
+      var socket = io.connect('http://localhost:3000');
+      socket.on('room305', function (data) {
+        console.log(data);
+        socket.emit('my305', { my: 'data' });
+      });
+    </script>
     <script type="text/javascript">
+
+
+/*
+        var socket = io.connect('http://127.0.0.1:8181/');
         var data = JSON.stringify({
                     room_id: 20,
-                    mode: 1
+                    mode: 3,
+                    state: 1
                 });
-        alert(data);
-        alert(JSON.parse(data).room_id);
-        alert(typeof data);
         $('#btn').click(function(){
             $.post(
                 'http://127.0.0.1:3000/',
                 data,
                 function(data, status){
                     alert(data);
+                    // 发送数据至服务器
+                    var t = setInterval(function(){
+                        socket.emit('fromWebClient', "connected ???");
+                        // 从服务器接收数据
+                        socket.on('pushToWebClient', function (data) {
+                              alert(data);
+                              clearInterval(t);
+                              if(data.temp >= data.target){
+                                socket.disconnect();
+                              }
+                        });
+                    }, 1000);
                 }
                 );
         });
+*/
     </script>
     </html>

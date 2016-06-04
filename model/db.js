@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 
-var dbURI = 'mongodb://localhost:27999/PoemsShow';
+var dbURI = 'mongodb://localhost:27999/ACS';
 var dbOptions = {
-	'user': 'PSAdmin', 
+	'user': 'admin',
 	'pass': '222333'
 }
 
@@ -20,7 +20,7 @@ mongoose.connection.on('disconnected', function () {
 process.on('SIGINT', function() {
       mongoose.connection.close(function () {
           console.log('Mongoose disconnected through app termination');
-          process.exit(0);   
+          process.exit(0);
        });
 });
 

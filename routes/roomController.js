@@ -26,7 +26,7 @@ roomController.post('/handshake',function(req,res){
 
 
     res.end(JSON.stringify({code: 1, str: "数据库查询得到的内容"}));
-    //res.send(model.switchOn(handshakeData));
+    //res.send(model.switch(handshakeData));
 });
 
 
@@ -46,7 +46,7 @@ roomController.post('/shutdown',function(req,res){
 
     var shutdownData = JSON.parse(postData);    // 解析数据？
     // 调度：是否需要响应那个等待的Room4
-    res.send(model.switchOff(handshakeData));
+    res.send(model.switch(handshakeData));
 });
 
 
@@ -66,13 +66,7 @@ roomController.post('/set',function(req,res){
 
     var setData = JSON.parse(postData);    // 解析数据？
     // 调度
-<<<<<<< HEAD
-    // 
     res.end(model.set(setData));
-=======
-    //
-    res.send(model.set(setData));
->>>>>>> 57a3702c0063c888f6b9e2b412eabb6b3c57a207
 });
 
 
@@ -91,13 +85,8 @@ roomController.post('/changed',function(req,res){
     });
 
     var changedData = JSON.parse(postData);    // 解析数据？
-<<<<<<< HEAD
     model.changed(changedData);
     res.end(JSON.parse({code:"OK", obj: null}));
-=======
-
-    res.end(model.changed(changedData));
->>>>>>> 57a3702c0063c888f6b9e2b412eabb6b3c57a207
 });
 
 

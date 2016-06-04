@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 
 var roomSchema = new Schema({
 	room_id: {type : Number, default: 0, index: true},
-	mode: {type: Number, default: 0},
+	mode: {type: Number, default: 0},                  // 制冷和制热模式
 	target_temp: {type: Number, default: 0},
 	cost: {type: Number, default: 0},
 	speed: {type: Number, default: 0},
