@@ -1,5 +1,5 @@
 var express = require('express');
-//var model = require('../model/ops');  // ops数据库操作
+var model = require('../model/ops');  // ops数据库操作
 
 
 var roomController = express.Router();
@@ -20,13 +20,14 @@ roomController.post('/handshake',function(req,res){
     // 监听end事件：代表post数据结束
     req.addListener('end', function(){
         console.log("从客户端发过来的数据是："+postData);
+        var handshakeData = JSON.parse(postData);    // 解析数据
+        model.switchOn(handshakeData).then(function(data){
+            res.end(JSON.stringify(data));
+        });
     });
 
-    console.log(postData);
+    
 
-
-    res.end(JSON.stringify({code: 1, str: "数据库查询得到的内容"}));
-    //res.send(model.switchOn(handshakeData));
 });
 
 
