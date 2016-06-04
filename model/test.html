@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Document</title>
+    </head>
+    <script type="text/javascript" src="../public/js/jquery.js"></script>
+    <body>
+    <form action="">
+        <input id="btn" type="button" value="test">
+    </form>
+    </body>
+    <script type="text/javascript">
+        var data = JSON.stringify({
+                    room_id: 20,
+                    mode: 1
+                });
+        alert(data);
+        alert(JSON.parse(data).room_id);
+        alert(typeof data);
+        $('#btn').click(function(){
+            $.post(
+                'http://127.0.0.1:3000/',
+                data,
+                function(data, status){
+                    alert(data);
+                }
+                );
+        });
+    </script>
+    </html>
