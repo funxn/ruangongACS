@@ -29,7 +29,7 @@ roomController.post('/handshake',function(req,res){
     //res.send(model.switchOn(handshakeData));
 });
 
-/*
+
 // 接收房间空调请求：停机
 roomController.post('/shutdown',function(req,res){
     res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
@@ -66,8 +66,13 @@ roomController.post('/set',function(req,res){
 
     var setData = JSON.parse(postData);    // 解析数据？
     // 调度
+<<<<<<< HEAD
     // 
     res.end(model.set(setData));
+=======
+    //
+    res.send(model.set(setData));
+>>>>>>> 57a3702c0063c888f6b9e2b412eabb6b3c57a207
 });
 
 
@@ -86,8 +91,13 @@ roomController.post('/changed',function(req,res){
     });
 
     var changedData = JSON.parse(postData);    // 解析数据？
+<<<<<<< HEAD
     model.changed(changedData);
     res.end(JSON.parse({code:"OK", obj: null}));
+=======
+
+    res.end(model.changed(changedData));
+>>>>>>> 57a3702c0063c888f6b9e2b412eabb6b3c57a207
 });
 
 
@@ -106,10 +116,9 @@ roomController.post('/checkCost',function(req,res){
     });
 
     var checkCostData = JSON.parse(postData);    // 解析数据？
-    
+
     res.send(model.checkCost(setData));
 });
-*/
 
 // 导出router作为一个模块，供app.js调用
 module.exports = roomController;
