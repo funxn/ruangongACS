@@ -94,7 +94,7 @@ model.switch = function(data){
 model.set = function(data){
     var promise = new mongoose.Promise();
 	if(data.state>=0 && data.state<=2){
-		Room.findOneAndUpdate(
+		Room.findOne(
             {room_id: data.room_id},
             {$set: {
                 target_temp: data.target,
