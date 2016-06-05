@@ -36,15 +36,15 @@ model.insertData = function(data){
 model.switch = function(data){
     var promise = new mongoose.Promise();
 	if(data.state>=0 && data.state<=2){
-		Room.findOneAndUpdate(
+		Room.findOne(
             {room_id: data.room_id},
-            {$set: {status: data.state}},
-            {$set: {ctime: Date()}},
-            {safe: true, upsert: true, new : true},
+            // {$set: {status: data.state}},
+            // {$set: {ctime: Date()}},
+            // {safe: true, upsert: true, new : true},
             function(err, room){
                 console.log("switch: " + room);
                 if(room){
-                    promise.resolve(null, JSON.stringify({code: 1, user: null}));
+                    promise.resolve(null, JSON.stringify({code: 1, room: room}));
                 }else{
                     promise.resolve(err, JSON.stringify({code: 0, msg: "room not exist!"}));
                 }
@@ -52,6 +52,8 @@ model.switch = function(data){
 	} else{
 		promise.resolve(err, JSON.stringify({code: 0, msg: "tag 不合法"}));
 	}
+
+    return promise;
 };
 
 
