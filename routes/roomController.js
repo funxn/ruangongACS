@@ -51,9 +51,7 @@ roomController.post('/handshake',function(req,res){
                 res.end(JSON.stringify({code:0,msg:"中央空调未开启"}));
             }
         });
-
     });
-
 });
 
 
@@ -81,8 +79,6 @@ roomController.post('/shutdown',function(req,res){
         
         res.end(model.switch(shutdownData));
     });
-
-    
 });
 
 
@@ -104,8 +100,6 @@ roomController.post('/set',function(req,res){
 
     var setData = JSON.parse(postData);    // 解析数据
     // 调度
-    // 
-    res.end(model.set(setData));
 });
 
 
