@@ -12,43 +12,35 @@
     </form>
     </body>
     <script>
-      var socket = io.connect('http://localhost:3000');
-      socket.on('room305', function (data) {
-        console.log(data);
-        socket.emit('my305', { my: 'data' });
-      });
-    </script>
-    <script type="text/javascript">
+        function startClientSock(room_id){
+            var socket = io.connect('http://localhost:8181');
+            socket.on('room'+room_id, function (data) {
+                console.log(data);
+                socket.emit('my'+room_id, { my: 'data' });
+            });
+        }
 
 
-/*
-        var socket = io.connect('http://127.0.0.1:8181/');
+
+//        var socket = io.connect('http://127.0.0.1:8181/');
         var data = JSON.stringify({
                     room_id: 20,
                     mode: 3,
                     state: 1
-                });
+                })
+
         $('#btn').click(function(){
             $.post(
                 'http://127.0.0.1:3000/',
                 data,
                 function(data, status){
                     alert(data);
-                    // 发送数据至服务器
-                    var t = setInterval(function(){
-                        socket.emit('fromWebClient', "connected ???");
-                        // 从服务器接收数据
-                        socket.on('pushToWebClient', function (data) {
-                              alert(data);
-                              clearInterval(t);
-                              if(data.temp >= data.target){
-                                socket.disconnect();
-                              }
-                        });
-                    }, 1000);
+                    pData = JSON.parse(data);
+                    if(pData.code != 0){
+                        startClientSock(pData.room.room_id);
+                    }
                 }
                 );
         });
-*/
     </script>
     </html>

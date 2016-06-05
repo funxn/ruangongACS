@@ -1,12 +1,15 @@
+var mongoose = require('mongoose');
+var model = require('./ops');
 var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
-server.listen(3000);
+server.listen(8181);
 
 
 var sockTag = [null, null, null];
 var sockFlag = [1, 1, 1];
+var holdon = [];
 
 app.get('/', function (req, res) {
   //res.sendfile(__dirname + '/test.html');
@@ -28,23 +31,23 @@ sockTag[0] = 305;
 
 function createSock(tag){
     io.on('connection', function (socket) {
-    var temp = 0;
-      socket.on('my'+tag, function (data) {
-        console.log(data);
-      });
-      var t = setInterval(function(){
-        temp += 1;
-        socket.emit('room'+tag, { hello: temp });
-        console.log(tag);
-        if(temp > 100){
-            clearInterval(t);
-        }
-      }, 1000);
+        var temp = 0;
+        socket.on('my'+tag, function (data) {
+            console.log(data);
+        });
+        var t = setInterval(function(){
+            temp += 1;
+            socket.emit('room'+tag, { hello: temp });
+            console.log(tag);
+            if(temp > 100){
+                clearInterval(t);
+            }
+        }, 1000);
     });
 }
 
-for(i=0; i<3; i++)
-    createSock(sockTag[i]);
+// for(i=0; i<3; i++)
+//     createSock(sockTag[i]);
 //         }
 //     }
 // }, 1000);
@@ -52,9 +55,7 @@ for(i=0; i<3; i++)
 
 
 /*
-var mongoose = require('mongoose');
 var app = require('express')();
-var model = require('./ops');
 var io = require('socket.io').listen(8181);
 
 var data = {
@@ -109,6 +110,8 @@ setInterval(function(){
 }, 1000);
 
 
+*/
+
 app.post('/', function(req, res){
     res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
 
@@ -124,8 +127,10 @@ app.post('/', function(req, res){
         console.log("从客户端发过来的数据是："+postData);
         var data = JSON.parse(postData);
         model.switch(data).then(function(room){
-            sockTag[0] = 'pushToWebClient';
-            console.log(room);
+            console.log(data.room_id);
+
+            sockTag[0] = data.room_id;
+            createSock(sockTag[0]);
             res.end(room);
         });
     });
@@ -134,5 +139,3 @@ app.post('/', function(req, res){
 });
 
 app.listen(3000);
-
-*/
