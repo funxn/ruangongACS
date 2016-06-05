@@ -26,22 +26,27 @@ centerController.post('/initConfig',function(req,res){
     // 监听end事件：代表post数据结束
     req.addListener('end', function(){
         console.log("从客户端发过来的数据是："+postData);
+        var config = JSON.parse(postData);    // 解析数据
+        // 调用model:存中央空调的初始化信息
+        // 中央空调初始化设置界面：mode，default_temp，min_temp, max_temp
+
+        model.initConfig(config).then(function(data){
+            console.log(data);
+            res.end(data);
+        },function(err){
+            console.log(err);
+            res.end("err!!!");
+        });
     });
 
-    var config = JSON.parse(postData);    // 解析数据
-    // 调用model:存中央空调的初始化信息
-    // 中央空调初始化设置界面：mode，default_temp，min_temp, max_temp
-
-    model.initConfig(config).then(function(data){
-        res.end(data);
-    });
-   // res.end(model.initConfig(config));
+    
+   
 });
 
 
 // 接收空调管理员的post请求：启动/停止中央空调
 // view: state = 待机(启动)/停机(停止)
-// model: result = "ack"
+// model: code 
 centerController.post('/switch',function(req,res){
     res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
     var postData = '';
@@ -54,15 +59,17 @@ centerController.post('/switch',function(req,res){
     req.addListener('end', function(){
         console.log("从客户端发过来的数据是："+postData);
         var switchData = JSON.parse(postData);    // 解析数据
-
+        
+        /*
         if (switchData.state == STATE_OFF) {
 
         }
+        */
 
         model.switch(switchData).then(function(data){
             res.end(data);
         });
-    }
+    });
 
 });
 

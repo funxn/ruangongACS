@@ -12,7 +12,7 @@ var roomSchema = new Schema({
 	temp: {type: Number, default: 0},
 	status: {type: Number, default: 0},
 	ctime: {type: Date, default: 0},
-    fee: {type: Date, default: 0}
+    fee: {type: Number, default: 0}
 });
 
 module.exports = mongoose.model('Room', roomSchema);

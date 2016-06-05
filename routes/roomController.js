@@ -1,16 +1,17 @@
 var mongoose = require('mongoose');
 var express = require('express');
 var model = require('../model/ops');  // ops数据库操作
+var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
 server.listen(8181);
 
-var sockTag = [];  // room_id,priority
+var sockTag = [];  // room_id,priority,
+var recordId = [];
 
 var sockFlag = [];
 
-sockFlag[room_id] = true;
 
 // 宏
 var STATE_OFF = 0;
@@ -47,15 +48,28 @@ roomController.post('/handshake',function(req,res){
         // 获取中央空调状态
        
         model.getCenterState().then(function(centerState){
+            console.log(centerState);
             if (centerState == STATE_ON)                // 中央空调状态：运行
             {
                 model.switch(handshakeData).then(function(data){
                     res.end(data);
                 });
+
+                model.newRecord(handshakeData).then(function(data){
+                    recordId[handshakeData.room_id] = data.record_id;
+                });
             } 
             else if (centerState == STATE_WAIT)          // 中央空调状态：待机
             {
                 model.setCenterState({state:STATE_ON});  // 中央空调状态更新为运行
+                model.switch(handshakeData).then(function(data){
+                    res.end(data);
+                });
+
+                model.newRecord(handshakeData).then(function(data){
+                    recordId[handshakeData.room_id] = data.record_id;
+                });
+                
             }
             else                                         // 中央空调状态：停机
             {
@@ -108,59 +122,40 @@ roomController.post('/set',function(req,res){
         console.log("从客户端发过来的数据是："+postData);
 
         var setData = JSON.parse(postData);    // 解析数据
-
+        // 返回：温控请求OK——room
+        model.set(setData).then(function(data){
+            res.end(data);
+        });
         // 调度
+        model.getChange({room_id: setData.room_id, record_id: recordId[setData.room_id]}).then(function(data){
+            if(sockTag.length < 3)
+            {
+                sockTag.push({room_id:data.room_id, priority: data.priority});
+                sockFlag[room_id] = true;
+                createSock(data.room_id, data.temp, data.target, data.speed, data.cost); 
+            }
+            else
+            {
+                // 请求队列更新
+                // 调度：排序sockTag
+                sockTag.push({room_id: data.room_id, priority: data.priority});
+                sockTag.sort(by("priority"));
+                
+                for(var i = 0; i < 3; i++)
+                {
+                    if(sockTag[i].room_id == data.room_id){
+                       sockFlag[sockTag[i].room_id] = true;
+                       createSock(data.room_id, data.temp, data.target, data.speed, data.cost);
+                       sockFlag[sockTag[3].room_id] = false;
+                    }
+                }
+
+            }
+        });
 
     });
     
 });
-
-
-// 接收房间空调请求：改变目标温度
-// view: room_id, target, speed, 
-// model: state, temp, cost
-roomController.post('/setTarget',function(req,res){
-    res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-    var postData = '';
-    req.setEncoding('utf8');
-    // 监听data事件：room_id, target, speed
-    req.addListener('data', function(postDataChunk){
-        postData += postDataChunk;
-    });
-    // 监听end事件：代表post数据结束
-    req.addListener('end', function(){
-        console.log("从客户端发过来的数据是："+postData);
-
-        var setData = JSON.parse(postData);    // 解析数据
-
-        // 修改温控队列的值
-    });
-    
-});
-
-// 接收房间空调请求：改变风速
-// view: room_id, speed
-// model: state, temp, cost
-roomController.post('/setSpeed',function(req,res){
-    res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-    var postData = '';
-    req.setEncoding('utf8');
-    // 监听data事件：room_id, target, speed
-    req.addListener('data', function(postDataChunk){
-        postData += postDataChunk;
-    });
-    // 监听end事件：代表post数据结束
-    req.addListener('end', function(){
-        console.log("从客户端发过来的数据是："+postData);
-
-        var setData = JSON.parse(postData);    // 解析数据
-
-        // 调度
-
-    });
-    
-});
-
 
 
 
@@ -211,7 +206,7 @@ roomController.post('/checkCost',function(req,res){
 });
 
 
-function createSock(room_id, temp, target, speed){
+function createSock(room_id, temp, target, speed, cost){
     io.on('connection', function (socket) {
         socket.on('my'+room_id, function (data) {
             console.log(data);
@@ -245,29 +240,65 @@ function createSock(room_id, temp, target, speed){
             if (sockFlag[room_id] == false)   // 如果调度被中断
             {
                 // 保存当前的信息,将该房间空调挂起
-
+                model.setChange({room_id:room_id,temp:temp, target: target, speed: speed, state: 2, cost: cost});
+                socket.emit('room'+room_id, JSON.stringify({ freshTemp: temp , freshState: 2, freshCost: cost}));
                 clearInterval(t);
             }
             else if(abs(temp-target) < 0.001)  // 达到目标温度
             {
                 // 修改该房间空调的状态为等待，从温控请求队列里删除，再次去调度
+                for (var i = 0; i < sockTag.length; i++)
+                {
+                    if(sockTag[i].room_id == room_id)
+                    {
+                        sockTag.splice(i,i);
+                        sockFlag[room_id] = false;
+                    }
+                }
+
+                if(sockTag.length >= 3)
+                {
+                   sockFlag[sockTag[2].room_id] = true;
+                   model.getChange({room_id: room_id, record_id: recordId[room_id]}).then(function(data){
+                   createSock(data.room_id, data.temp, data.target, data.speed, data.cost);
+                });
+                }
 
                 clearInterval(t);
             }
             else
             {
                 // 刷新信息：temp, state, cost
-                socket.emit('room'+room_id, { freshTemp: temp , freshState: state, freshCost: cost});
+                temp += det;
+                cost += abs(det);
+                socket.emit('room'+room_id, JSON.stringify({ freshTemp: temp , freshState: state, freshCost: cost}));
             }
 
         }, 6000);
     });
 }
 
-function shedule()
-{
-
-}
+//by函数接受一个成员名字符串做为参数
+//并返回一个可以用来对包含该成员的对象数组进行排序的比较函数
+var by = function(name){
+    return function(o, p){
+        var a, b;
+        if (typeof o === "object" && typeof p === "object" && o && p) {
+            a = o[name];
+            b = p[name];
+            if (a === b) {
+                return 0;
+            }
+            if (typeof a === typeof b) {
+                return a < b ? -1 : 1;
+            }
+            return typeof a < typeof b ? -1 : 1;
+        }
+        else {
+            throw ("error");
+        }
+    }
+};
 
 // 导出router作为一个模块，供app.js调用
 module.exports = roomController;
