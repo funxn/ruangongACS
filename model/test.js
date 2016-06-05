@@ -7,17 +7,16 @@ var io = require('socket.io')(server);
 server.listen(8181);
 
 
-var sockTag = [null, null, null];
-var sockFlag = [1, 1, 1];
-var holdon = [];
+var sockTag = [];
 
-app.get('/', function (req, res) {
-  //res.sendfile(__dirname + '/test.html');
-  sockTag[0]++;            // 可以使用room_id作为推送号统一起来
-  res.end('room'+sockTag[0]);
-});
 
-sockTag[0] = 305;
+// app.get('/', function (req, res) {
+//   //res.sendfile(__dirname + '/test.html');
+//   sockTag[0]++;            // 可以使用room_id作为推送号统一起来
+//   res.end('room'+sockTag[0]);
+// });
+
+// sockTag[0] = 305;
 
 // 事件监听器会在函数调用结束时被清除
 // setInterval(function(){
@@ -29,9 +28,8 @@ sockTag[0] = 305;
 
 // 因为异步调用function(socket){}, 此处不能使用for循环
 
-function createSock(tag){
+function createSock(tag, temp){
     io.on('connection', function (socket) {
-        var temp = 0;
         socket.on('my'+tag, function (data) {
             console.log(data);
         });
