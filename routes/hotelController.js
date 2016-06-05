@@ -8,6 +8,8 @@ hotelController.get('/',function(req,res){
 });
 
 
+
+// 酒店空调的使用/消费的报表
 // 报表内容：(room_id, power, cost)
 
 // 酒店管理员请求：查看日报表
