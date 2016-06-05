@@ -62,7 +62,7 @@ model.switch = function(data){
     if(data.state>=0 && data.state<=2){
         Room.findOneAndUpdate(
             {room_id: data.room_id},
-            {$set: {status: data.state, ctime: Date(), mode: data.model}},
+            {$set: {status: data.state, ctime: Date(), temp:data.temp}},
             {safe: true, upsert: true, new : true},
             function(err, room){
                 if(room){
@@ -72,10 +72,12 @@ model.switch = function(data){
                         temp: room.temp,
                         min_temp: setM[room.mode].min_temp,
                         max_temp: setM[room.mode].max_temp,
-                        state: room.state
+                        state: room.status,
+                        fee: room.fee
                     };
                     promise.resolve(null, JSON.stringify({code: 1, room: reData}));
                 }else{
+
                     Room.create(data, function(err, room){
                         if(err){
                             promise.resolve(err, JSON.stringify({code: 0, msg: err}));
@@ -184,7 +186,7 @@ model.getChange = function(data){
                 if(err){
                     promise.resolve(err, JSON.stringify({code: 0, msg: err}));
                 }
-                else if(room){
+                else if(record){
                     Room.findOne(
                         {room_id: data.room_id},
                         function(err, room){
@@ -197,7 +199,7 @@ model.getChange = function(data){
                                     temp: room.temp,
                                     target: room.target_temp,
                                     speed: room.speed,
-                                    room_id:room.room_id
+                                    room_id: room.room_id
                                 }
                                 promise.resolve(null, reData);
                             }
@@ -267,9 +269,9 @@ model.initConfig = function(config){
     Room.findOneAndUpdate(
         {room_id: 0},
         {$set: {
-            mode: config.model,
-            default_temp: config.default,
-            fee: config.fee;
+            mode: config.mode,
+            default_temp: config.default_temp,
+            fee: config.fee,
             ctime: Date()
         }},
         {safe: true, upsert: true, new : true},
@@ -293,7 +295,7 @@ model.getCenterState = function(){
         {room_id: 0},
         function(err, room){
             if(room){
-                promise.resolve(null, room.state);
+                promise.resolve(null, room.status);
             }else{
                 promise.resolve(null, 0);
             }
@@ -305,7 +307,7 @@ model.getCenterState = function(){
 model.setCenterState = function(data){
     Room.findOneAndUpdate(
         {room_id: 0},
-        {$set: {status: data.state}},
+        {$set: {status: data.status}},
         {safe: true, upsert: true, new : true},
         function(err, room){});
 }
