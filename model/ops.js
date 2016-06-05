@@ -17,6 +17,8 @@ var setM = [
      max_temp: 30}
 ];
 
+var RecordNum = 1;
+
 // 调用model:存中央空调的初始化信息
 // 中央空调初始化设置界面：mode，default_temp，min_temp, max_temp
 model.initConfig = function(data){
@@ -94,7 +96,7 @@ model.switch = function(data){
 model.set = function(data){
     var promise = new mongoose.Promise();
 	if(data.state>=0 && data.state<=2){
-		Room.findOne(
+		Room.findOneAndUpdate(
             {room_id: data.room_id},
             {$set: {
                 target_temp: data.target,
@@ -107,7 +109,7 @@ model.set = function(data){
                     promise.resolve(err, JSON.stringify({code: 0, msg: err}));
                 }
                 else if(room){
-                    // 实时推送？？ 在这里设置吗？？
+                    promise.resolve(null, JSON.stringify({code: 1, room: room}));
                 }else{
                     promise.resolve(err, JSON.stringify({code: 0, msg: "cannot set"}));
                 }
@@ -119,8 +121,103 @@ model.set = function(data){
     return promise;
 };
 
+model.checkCost = function(data){
+    var promise = new mongoose.Promise();
+    Room.findOne(
+            {room_id: data.room_id},
+            function(err, room){
+                if(err){
+                    promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+                }
+                else if(room){
+                    promise.resolve(null, JSON.stringify({code: 1, cost: room.cost}));
+                }else{
+                    promise.resolve(err, JSON.stringify({code: 0, msg: "cannot checkCost"}));
+                }
+        });
 
+    return promise;
+};
 
+// 创建一条record记录：
+model.newRecord = function(data){
+    Record.create(
+            {
+                record_id: RecordNum++;
+                room_id: data.room_id;
+                start_time: Date();
+                start_temp: data.temp;
+            }
+        )
+}
+// 对Record记录的修改
+model.setRecord = function(data){
+    Record.findOneAndUpdate(
+        {record_id: data.record_id},
+        {$set: {power: data.power,
+                end_time: Date(),
+                end_temp: data.temp,
+                power: data.power}},
+        {safe: true, upsert: true, new : true},
+        function(err, record){
+        if(err){
+            console.log('setRecord error: '+err);
+        }
+    });
+};
+
+// 对于调度时修改保存的值的设置：
+// 获取温度调控时初始的一些信息：
+model.getChange = function(data){
+    var promise = new mongoose.Promise();
+    Record.findOne(
+            {record_id: data.record_id},
+            function(err, record){
+                if(err){
+                    promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+                }
+                else if(room){
+                    Room.findOne(
+                        {room_id: data.room_id},
+                        function(err, room){
+                            if(err)
+                                promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+                            else{
+                                var reData = {
+                                    cost: room.cost,
+                                    priority: room.ctime - record.start_time,
+                                    temp: room.temp,
+                                    target: room.target_temp,
+                                    speed: room.speed
+                                }
+                                promise.resolve(null, JSON.stringify({code: 1, data: reData}));
+                            }
+                        }
+                    )
+                }else{
+                    promise.resolve(err, JSON.stringify({code: 0, msg: "getChange room err"}));
+                }
+            }
+        );
+};
+model.setChange = function(data){
+    Room.findOneAndUpdate(
+        {room_id: data.room_id},
+        {$set: {
+            temp: data.temp,
+            target_temp: data.target,
+            speed: data.speed,
+            status: data.state,
+            cost: data.cost,
+            ctime: Date()
+        }},
+        {safe: true, upsert: true, new : true},
+        function(err){
+            if(err){
+                console.log('setChange error: '+err);
+            }
+    });
+};
 
 // model.switch = function(data){
 //     var promise = new mongoose.Promise();
@@ -155,6 +252,31 @@ model.set = function(data){
 
 
 /* 中央空调 */
+model.initConfig = function(config){
+    var promise = new mongoose.Promise();
+    Room.findOneAndUpdate(
+        {room_id: 0},
+        {$set: {
+            mode: config.model,
+            default_temp: config.default,
+            fee: config.fee;
+            ctime: Date()
+        }},
+        {safe: true, upsert: true, new : true},
+        function(err, room){
+            if(err){
+                promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+            }
+            else if(room){
+                promise.resolve(null, JSON.stringify({code:2, room: room}));
+            }else{
+                promise.resolve(err, JSON.stringify({code: 0, msg: "cannot set"}));
+            }
+    });
+
+    return promise;
+}
+
 model.getCenterState = function(){
     var promise = new mongoose.Promise();
     Room.findOne(
