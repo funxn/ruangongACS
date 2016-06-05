@@ -4,8 +4,6 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
 
-<script type="text/javascript" src="js/jquery.min.js"></script>
-
 <font id="title" size="6" color="#ffffff"><pre>                  房间空调控制面板</pre></font> 
 <body bgcolor="#666666" leftmargin="0" topmargin="0" marginwidth="300" marginheight="100" text-align:center>
 <!-- Save for Web Slices (全蓝背景—切片1.psd) -->
@@ -14,9 +12,9 @@
 		<td colspan="5">
 			<div style="background:url(images/room4_01.gif) no-repeat;width:683px;height:48px;text-align:center;vertical-align:middle;line-height:48px">
 		        <b id="no">编号:</b>
-				<b id="roomId" >305</b>
+				<b id="roomId"></b>
 				<b>空调状态:</b>
-				<b id="showState">待机</b>
+				<b id="showState">停机</b>
 			</div></td>
 		<td>
 			<img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="48" alt=""></td>
@@ -44,15 +42,15 @@
 	<tr>
 		<td rowspan="4">
 			<div style="background:url(images/room4_07.gif) no-repeat;width:153px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
-				<font id="showCurrentTemp" size="6">30</font>
+				<font id="showCurrentTemp" size="6"></font>
 			</div></td>
 		<td rowspan="4">
 			<div style="background:url(images/room4_08.gif) no-repeat;width:149px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
-				<font id="showAimTemp" size="6">26</font>
+				<font id="showAimTemp" size="6"></font>
 			</div></td>
 		<td rowspan="4">
 			<div style="background:url(images/room4_09.gif) no-repeat;width:172px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
-				<font id="showSpeed" size="6">中风</font>
+				<font id="showSpeed" size="6"></font>
 			</div></td>
 		<td>
 			<img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="12" alt=""></td>
@@ -94,11 +92,11 @@
 	<tr>
 		<td>
 			<div style="background:url(images/room4_17.gif) no-repeat;width:153px;height:118px;text-align:center;vertical-align:middle;line-height:118px">
-				<font id="showMode" size="6">制冷</font>
+				<font id="showMode" size="6"></font>
 			</div></td>
 		<td>
 			<div style="background:url(images/room4_18.gif) no-repeat;width:149px;height:118px;text-align:center;vertical-align:middle;line-height:118px">
-				<font id="showCost" size="6">0.00</font>
+				<font id="showCost" size="6"></font>
 			</div></td>
 		<td>
 			<img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="118" alt=""></td>
@@ -107,179 +105,274 @@
 <!-- End Save for Web Slices -->
 </body>
 
-
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/socket.io.js"></script>
 <script type="text/javascript">  
-    var max_temp;  //调节温度的最大温度
-    var min_temp;  //调节温度的最小温度
-    var ROOM_ID = 305;
-   // var current_temp = 26; //房间当前温度
-    var host = "http://10.8.175.114:3000/room";  
+    var max_temp = 33;  //调节温度的最大温度
+    var min_temp = 22;  //调节温度的最小温度
+    var current_temp = 26; //房间默认的当前温度
+    var ROOM_ID = 10;
+    var STATE_OFF = 0;
+    var STATE_ON = 1;
+    var STATE_WAIT = 2;
+    var MODE_COLD = 0;
+    var MODE_HOT = 1;
+    var SPEED_LOW = 0;
+    var SPEED_M = 1;
+    var SPEED_HIGH = 2;
+    var host = "http://10.211.3.77:3000/room";  
+    var t;
+    $('#roomId').text(ROOM_ID);
     
     function toShowMode(mode) {
-        if (mode == 0) {
+        if (mode == MODE_COLD) {
         	return '制冷';
         }
-        else if (mode == 1) {
+        else if (mode == MODE_HOT) {
         	return '制暖';
         }
     }
     function toShowState(state) {
-    	if (state == 0) {
+    	if (state == STATE_OFF) {
     		return '停机';
     	}
-    	else if(state == 1) {
+    	else if(state == STATE_ON) {
     		return '运行';
     	}
-    	else if (state == 2) {
+    	else if (state == STATE_WAIT) {
     		return '待机';
     	}
     }
     function toShowSpeed(speed) {
-    	if (speed == 0) {
+    	if (speed == SPEED_LOW) {
     		return '低风';
     	}
-    	else if(speed == 1) {
+    	else if(speed == SPEED_M) {
     		return '中风';
     	}
-    	else if (speed == 2) {
+    	else if (speed == SPEED_HIGH) {
     		return '高风';
     	}
     }
     function toGetMode() {
     	var showmode = $('#showMode').text();
     	if (showmode == '制冷') {
-        	return 0;
+        	return MODE_COLD;
         }
         else if (showmode == '制暖') {
-        	return 1;
+        	return MODE_HOT;
         }
     }
     function toGetState() {
     	var showstate = $('#showState').text();
     	if (showstate == '停机') {
-    		return 0;
+    		return STATE_OFF;
     	}
     	else if(showstate == '运行') {
-    		return 1;
+    		return STATE_ON;
     	}
     	else if (showstate == '待机') {
-    		return 2;
+    		return STATE_WAIT;
     	}
     }
     function toGetSpeed() {
     	var showspeed = $('#showSpeed').text();
     	if (showspeed == '低风') {
-    		return 0;
+    		return SPEED_LOW;
     	}
     	else if(showspeed == '中风') {
-    		return 1;
+    		return SPEED_M;
     	}
     	else if (showspeed == '高风') {
-    		return 2;
+    		return SPEED_HIGH;
     	}
     }    
      //递归调用，当前温度变化显示
-     function tempDo(temp){
+     function tempDo(){
+        var temp = $('#showCurrentTemp').text();
      	var target = $('#showAimTemp').text();
-     	if(Math.ads(temp - target) < 1) {
-     		temp+=0.3;
-			$('showCurrentTemp').text(temp);
-    		setInterval('tempDo(temp)',1000);
+     	if(Math.abs(temp - target) < 1) {   //小于1度
+     		if (toGetMode() == 0) {
+     			temp-=0.5;
+     		}
+     		else {
+     			temp+=0.5;
+     		}	
+			$('#showCurrentTemp').text(temp.toFixed(2));
+
+			//发送服务器当前温度 --------------------------------有待验证是否正确？
+            sendWaitTempChange(temp);
+
+    		setTimeout('tempDo()',1000);
      	}
      	else {           //温度差大于等于1度，发送请求
+            clearTimeout(t);
      		sendChangeTemp(target);
      	}	
     }
     //房间空调待机时温度变化
-    function sacTempChange() {//？？？？？？？？？？？？？？？？？？？？？？？？？
-        var temp = $('#showCurrentTemp').text();
-        // while(toGetState() == 2){
-       	tempDo(temp);
-        //定时器，确定温度变化，待完善，看时间函数。。。。。。。。。。。
+    function sacTempChange() {
+        $('#showState').text(toGetState(STATE_WAIT));  //状态修改为待机    
+       	tempDo();
+        alert('目标温度请求'+$('#showAimTemp').text());
     }
+    //待机时发送当前温度变化
+    function sendWaitTempChange(current_temp) {
+    	var data = {
+    		room_id :ROOM_ID,
+    		temp: current_temp
+    	};
+    	$.post(
+    		host+"/changed",
+    		JSON.stringify(data),
+    		function(data,status){
+    			alert(data);
+    			var getData = JSON.parse(data);
+    			if (getData.code != 0) {
+    			}
+    		}
+    		);
+    }
+    //建立socket连接接收数据，多次接收
+    function startClientSock(room_id){
+        var socket = io.connect('http://10.211.3.77:8181');
+        socket.on('room'+room_id, function (data) {
+            //console.log(data);
+            //alert(data);
+            var getData = JSON.parse(data);
+            //显示接收数据中的温度
+            $('#showCurrentTemp').text(getData.temp.toFixed(2));
+            socket.emit('my'+room_id, { my: '10' });
+            });
+        }
+
     //发送温度请求
     function sendChangeTemp(temp) {
     	var data = {
-    		method: 'set',
     		room_id: ROOM_ID,
-    		target: temp
-            //speed: s      //需要两个一起发吗
+    		target: temp,
+            speed: toGetSpeed()      //需要两个一起发吗
     	};
     	$.post(
-            host+"/handshake",
+            host+"/set",
             JSON.stringify(data),
             function(data, status){
-            	alert(data);
+            	//alert(data);
             	var getData = JSON.parse(data);
             	//升温请求返回操作
-            	//返回多个请求怎么操作？？？？？？？？？？？？？？？？？？？？？？？
-            	if (getData.temp == $('#showCurrentTemp').text()) {
-            		//进入待机，启动温度变化函数
+            	if (getData.code != 0) {
+                    //关闭房间温度变化
+                    clearTimeout(t);//！！！！！！！！！！！！！！！！！！一定要关
+            		//$('#showAimTemp').text(getData.temp);//显示要修改的目标温度？？？？
+            		startClientSock(ROOM_ID); //建立socket连接
             	}
+            	else {
+            		//温度请求失败
+            		alert('温控请求失败');
+            	}
+
+            	//进入待机，启动温度变化函数--------------------------------------------
+            	//sacTempChange();            	
             }
     		);
     }
     //发送风速请求
     function sendChangeSpeed(s){
     	var data = {
-    		method: 'set',
     		room_id: ROOM_ID,
-    		//target:temp;         //需要两个一起发吗
+    		target:$('#showAimTemp').text(),        //需要两个一起发吗
     		speed: s
     	};
     	$.post(
-            host+"/handshake",
+            host+"/set",
             JSON.stringify(data),
             function(data,status){
             	alert(data, status);
             	var getData = JSON.parse(data);
             	//风速请求返回操作
-            	if (getData.result == 'ok') {   //返回的消息里面有result吗？？？？？？文档里没有
+            	if (getData.code != 0) {   
             		$('#showSpeed').text(toShowSpeed(s));
             	}
-                //返回不成功，不做操作
+            	else {
+            		//返回不成功，不做操作
+            		alert('风速请求失败');
+            	}
+                
             }
     		);
     }
     //点击开关按钮
 	$('#btnOnOff').click(function(){
-		var data = {
-			method: 'handshake',
-			room_id: ROOM_ID,
-			//temp: parseInt($('#showCurrentTemp').text())
-		};
-		$.post(
-				host+"/handshake",
-				JSON.stringify(data),
-				function(data, status){
-					alert(data);
-					var getData = JSON.parse(data);
-					if(getData.result == 'ok'){
-						min_temp = getData.min_temp;  //保存调节温度的最小温度
-						max_temp = getData.max_temp;  //保存调节温度的最大值
-						$('#showMode').text(toShowMode(getData.mode));//显示工作模式
-						$('#showAimTemp').text(getData.temp); //显示缺省目标温度
-						$('#showState').text(toShowState(getData.state));//显示房间空调状态
-						var current_temp = $('#showCurrentTemp').text();
-						if (getData.temp == current_temp) {
-							//启动房间空调温度函数
+		if (toGetState() == STATE_OFF) {
+			var data_on = {
+				room_id: ROOM_ID,
+				temp: current_temp,
+				state: STATE_ON
+				//temp: parseInt($('#showCurrentTemp').text())
+			};
+			$.post(
+					host+"/handshake",
+					JSON.stringify(data_on),
+					function(data, status){
+						//alert(data);
+						var getData = JSON.parse(data);
+						if(getData.code != 0){
+							min_temp = getData.room.min_temp;  //保存调节温度的最小值
+							max_temp = getData.room.max_temp;  //保存调节温度的最大值
+							$('#showMode').text(toShowMode(getData.room.mode));//显示工作模式
+							$('#showAimTemp').text(getData.room.target_temp); //显示缺省目标温度
+							$('#showCurrentTemp').text(current_temp); //显示当前设置的默认温度
+							$('#showState').text(toShowState(getData.room.state));//显示房间空调状态
+							$('#showSpeed').text(toShowSpeed(SPEED_M));//显示默认风速
+							current_temp = $('#showCurrentTemp').text();
+							if (getData.room.target_temp == current_temp) {
+								//启动房间空调温度变化函数
+								sacTempChange();
+							}
+							else {
+								//向中央空调发送温控请求
+								sendChangeTemp(getData.room.target_temp);
+							}
 						}
 						else {
-							//向中央空调发送温控请求
+							alert("中央空调开机请求响应错误！");
 						}
 					}
-					else {
-						alert("中央空调开机请求响应错误！");
+				);
+		}
+		else {
+			var data_off = {
+				room_id: ROOM_ID,
+				state: STATE_OFF
+				//temp: parseInt($('#showCurrentTemp').text())
+			};
+			$.post(
+					host+"/shutdown",
+					JSON.stringify(data_off),
+					function(data, status){
+						alert(data);
+						var getData = JSON.parse(data);
+						if(getData.code != 0){
+							$('#showMode').text("");//显示工作模式为空
+							$('#showAimTemp').text(""); //显示目标温度为空
+							$('#showCurrentTemp').text(""); //显示当前温度为空
+							$('#showState').text(toShowState(STATE_OFF));//显示房间状态为停机
+							$('#showSpeed').text("");//显示风速为空
+						}
+						else {
+							alert("中央空调关机请求响应错误！");
+						}
 					}
-				}
-			);
+				);
+		}
+		
 	});
      
     //点击风速（高）按钮
     $('#btnHigh').click(function(){
-    	if (toGetState() != 0) {
+    	if (toGetState() != STATE_OFF) {
     		var speed = toGetSpeed();
-    		if(speed != 2){
+    		if(speed != SPEED_HIGH){
     			sendChangeSpeed(speed);
     		}
     	}
@@ -287,9 +380,9 @@
 
     //点击风速（中）按钮
     $('#btnM').click(function(){
-    	if (toGetState() != 0) {
+    	if (toGetState() != STATE_OFF) {
     		var speed = toGetSpeed();
-    		if(speed != 1){
+    		if(speed != SPEED_M){
     			sendChangeSpeed(speed);
     		}
     	}	
@@ -297,41 +390,121 @@
 
     //点击风速（低）按钮
 	$('#btnLow').click(function(){
-		if (toGetState() != 0) {
+		if (toGetState() != STATE_OFF) {
 			var speed = toGetSpeed();
-    		if(speed != 0){
+    		if(speed != SPEED_LOW){
     			sendChangeSpeed(speed);
     		}
 		}		
 	});
 
-	//点击升温按钮
-	$('#btnUp').click(function(){
-        //1s内发送最后一次，超过1s发送多次，1s内的需要在本地显示目标温度的变化，只是请求最后一次
-	});
-
-	//点击降温按钮
-	$('#btnDown').click(function(){
-
-	});
-
-	//点击查看当前消费金额按钮
+    //点击查看当前消费金额按钮
 	$('#btnLook').click(function(){
-		if (toGetState() != 0) {
+		if (toGetState() != STATE_OFF) {
     		var data = {
-            	method: look,
             	room_id: ROOM_ID
     		};
 			$.post(
-            	host+"/handshake",
+            	host+"/checkCost",
 					JSON.stringify(data),
 					function(data, status) {
 						alert(data);
+						var getData = JSON.parse(data);
+                        if (getData.code != 0) {
+
+                        }
 						//返回信息判断，进行金额显示
 					}
         		);
 		}
 	});
+
+	//判断是否在温控范围内
+	 function isInTempRane(temp) {
+    	if (temp >= min_temp && temp <= max_temp) {
+    		return 1;
+    	}
+    	else {
+    		return 0;
+    	}
+    }
+    //点击升温按钮
+	$('#btnUp').click(function(){
+        //1s内发送最后一次，超过1s发送多次，1s内的需要在本地显示目标温度的变化，只是请求最后一次
+        //温度值判断，是否超出范围
+        var temp = $('#showAimTemp').text();
+        temp++;
+        if (isInTempRane(temp)) {
+        	$('#showAimTemp').text(temp); //在发送前显示还是接受后？？？
+        	sendChangeSpeed(temp);
+        	//alert(temp);
+        }
+        else {
+        	alert('已超出调节温度范围');
+        }        
+	});
+
+	//点击降温按钮
+	$('#btnDown').click(function(){
+        var temp = $('#showAimTemp').text();
+        temp--;
+        if (isInTempRane(temp)) {
+        	$('#showAimTemp').text(temp);
+        	sendChangeSpeed(temp);
+        	//alert(temp);
+        }
+        else {
+        	alert('已超出调节温度范围');
+        } 
+	});
+	//对升温降温按钮同时作用
+	// var dateObj = new Date();
+	// var time_click_changeTemp = dateObj.getMilliseconds(); //返回毫秒数
+	//var time_click_changeTemp = 0;
+	//1s内发送最后一次，超过1s发送多次，1s内的需要在本地显示目标温度的变化，只是请求最后一次
+	//点击升温按钮
+	// $('#btnUp').click(function(){
+	// 	var date = new Date();
+	// 	var nowSeconds = date.getMilliseconds();
+ //        var temp = $('#showAimTemp').text();
+ //        temp++;
+ //        if (isInTempRane(temp)) {
+ //        	if (nowSeconds - time_click_changeTemp < 1000) {
+ //        		//alert(nowSeconds);
+ //        		//alert(time_click_changeTemp);
+ //            	$('#showAimTemp').text(temp);                     
+	// 		}
+	// 		else {
+	// 			time_click_changeTemp = nowSeconds;        	
+ //        		alert(temp);
+ //        		//sendChangeTemp(temp);
+ //       		}
+ //        }
+ //        else {
+ //        	   alert('已超出调节温度范围');
+ //        }	
+	// });
+
+	// //点击降温按钮
+	// $('#btnDown').click(function(){
+	// 	var date = new Date();
+ //        var nowSeconds = date.getMilliseconds();
+ //        var temp = $('#showAimTemp').text();
+ //        temp--;
+ //        if (isInTempRane(temp)) {
+ //        	if (nowSeconds - time_click_changeTemp < 1000) {
+ //            	$('#showAimTemp').text(temp);                     
+	// 		}
+	// 		else {
+	// 			time_click_changeTemp = nowSeconds;        	
+ //        		alert(temp);
+ //        		//sendChangeTemp(temp);
+ //       		}
+ //        }
+ //        else {
+ //        	alert('已超出调节温度范围');
+ //        }			
+	// });
 
 </script>
 </html>
