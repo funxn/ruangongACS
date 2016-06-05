@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-var dbURI = 'mongodb://10.8.184.25:27999/ACS';
+var dbURI = 'mongodb://10.8.88.107:27999/ACS';
 var dbOptions = {
 	'user': 'admin', 
 	'pass': '222333'

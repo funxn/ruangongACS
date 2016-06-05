@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var express = require('express');
 var model = require('../model/ops');  // ops数据库操作
+var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
@@ -11,7 +12,6 @@ var recordId = [];
 
 var sockFlag = [];
 
-sockFlag[room_id] = true;
 
 // 宏
 var STATE_OFF = 0;
@@ -48,6 +48,7 @@ roomController.post('/handshake',function(req,res){
         // 获取中央空调状态
        
         model.getCenterState().then(function(centerState){
+            console.log(centerState);
             if (centerState == STATE_ON)                // 中央空调状态：运行
             {
                 model.switch(handshakeData).then(function(data){
@@ -121,7 +122,7 @@ roomController.post('/set',function(req,res){
         console.log("从客户端发过来的数据是："+postData);
 
         var setData = JSON.parse(postData);    // 解析数据
-        // 返回：设置OK——room
+        // 返回：温控请求OK——room
         model.set(setData).then(function(data){
             res.end(data);
         });
@@ -129,14 +130,14 @@ roomController.post('/set',function(req,res){
         model.getChange({room_id: setData.room_id, record_id: recordId[setData.room_id]}).then(function(data){
             if(sockTag.length < 3)
             {
-                sockTag.push({room_id: data.room_id, priority: data.priority});
+                sockTag.push({room_id:data.room_id, priority: data.priority});
                 sockFlag[room_id] = true;
                 createSock(data.room_id, data.temp, data.target, data.speed, data.cost); 
-
             }
             else
             {
-                // 调度，排序sockTag
+                // 请求队列更新
+                // 调度：排序sockTag
                 sockTag.push({room_id: data.room_id, priority: data.priority});
                 sockTag.sort(by("priority"));
                 
@@ -155,53 +156,6 @@ roomController.post('/set',function(req,res){
     });
     
 });
-
-
-// 接收房间空调请求：改变目标温度
-// view: room_id, target, speed, 
-// model: state, temp, cost
-roomController.post('/setTarget',function(req,res){
-    res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-    var postData = '';
-    req.setEncoding('utf8');
-    // 监听data事件：room_id, target, speed
-    req.addListener('data', function(postDataChunk){
-        postData += postDataChunk;
-    });
-    // 监听end事件：代表post数据结束
-    req.addListener('end', function(){
-        console.log("从客户端发过来的数据是："+postData);
-
-        var setData = JSON.parse(postData);    // 解析数据
-
-        // 修改温控队列的值
-    });
-    
-});
-
-// 接收房间空调请求：改变风速
-// view: room_id, speed
-// model: state, temp, cost
-roomController.post('/setSpeed',function(req,res){
-    res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-    var postData = '';
-    req.setEncoding('utf8');
-    // 监听data事件：room_id, target, speed
-    req.addListener('data', function(postDataChunk){
-        postData += postDataChunk;
-    });
-    // 监听end事件：代表post数据结束
-    req.addListener('end', function(){
-        console.log("从客户端发过来的数据是："+postData);
-
-        var setData = JSON.parse(postData);    // 解析数据
-
-        // 调度
-
-    });
-    
-});
-
 
 
 
@@ -287,7 +241,7 @@ function createSock(room_id, temp, target, speed, cost){
             {
                 // 保存当前的信息,将该房间空调挂起
                 model.setChange({room_id:room_id,temp:temp, target: target, speed: speed, state: 2, cost: cost});
-                socket.emit('room'+room_id, { freshTemp: temp , freshState: 2, freshCost: cost});
+                socket.emit('room'+room_id, JSON.stringify({ freshTemp: temp , freshState: 2, freshCost: cost}));
                 clearInterval(t);
             }
             else if(abs(temp-target) < 0.001)  // 达到目标温度
@@ -317,7 +271,7 @@ function createSock(room_id, temp, target, speed, cost){
                 // 刷新信息：temp, state, cost
                 temp += det;
                 cost += abs(det);
-                socket.emit('room'+room_id, { freshTemp: temp , freshState: state, freshCost: cost});
+                socket.emit('room'+room_id, JSON.stringify({ freshTemp: temp , freshState: state, freshCost: cost}));
             }
 
         }, 6000);
@@ -344,7 +298,7 @@ var by = function(name){
             throw ("error");
         }
     }
-}
+};
 
 // 导出router作为一个模块，供app.js调用
 module.exports = roomController;

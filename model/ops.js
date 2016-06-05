@@ -22,35 +22,33 @@ var RecordNum = 1;
 // 调用model:存中央空调的初始化信息
 // 中央空调初始化设置界面：mode，default_temp，min_temp, max_temp
 model.initConfig = function(data){
+    console.log(data);
     var promise = new mongoose.Promise();
-    if(data.state>=0 && data.state<=2){
-        Room.findOneAndUpdate(
-            {room_id: 0},
-            {$set: {
-                mode: data.model,
-                ctime: Date(),
-                target_temp: data.default_temp,
-                min_temp: setM[data.model].min_temp,
-                max_temp: setM[data.model].max_temp
-                }
-            },
-            {safe: true, upsert: true, new : true},
-            function(err, room){
-                if(room){
-                    promise.resolve(null, JSON.stringify({code: 1, room: room}));
-                }else{
-                    Room.create(data, function(err, room){
-                        if(err){
-                            promise.resolve(err, JSON.stringify({code: 0, msg: err}));
-                        }else{
-                            promise.resolve(null, JSON.stringify({code: 2, room: room}));
-                        }
-                    });
-                }
-        });
-    } else{
-        promise.resolve(null, JSON.stringify({code: 0, msg: "state 不合法"}));
-    }
+    Room.findOneAndUpdate(
+        {room_id: 0},
+        {$set: {
+            mode: data.mode,
+            ctime: Date(),
+            target_temp: data.default_temp,
+            fee: data.fee
+            // min_temp: setM[data.mode].min_temp,
+            // max_temp: setM[data.mode].max_temp
+            }
+        },
+        {safe: true, upsert: true, new : true},
+        function(err, room){
+            if(room){
+                promise.resolve(null, JSON.stringify({code: 1, room: room}));
+            }else{
+                Room.create(data, function(err, room){
+                    if(err){
+                        promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+                    }else{
+                        promise.resolve(null, JSON.stringify({code: 2, room: room}));
+                    }
+                });
+            }
+    });
 
     return promise;
 }
@@ -62,25 +60,44 @@ model.switch = function(data){
     if(data.state>=0 && data.state<=2){
         Room.findOneAndUpdate(
             {room_id: data.room_id},
-            {$set: {status: data.state, ctime: Date(), mode: data.model}},
+            {$set: {status: data.state, ctime: Date(), temp: data.temp}},
             {safe: true, upsert: true, new : true},
             function(err, room){
+
                 if(room){
-                    // 对要返回的数据reData进行处理
-                    var reData = {
-                        model: room.mode,
-                        temp: room.temp,
-                        min_temp: setM[room.mode].min_temp,
-                        max_temp: setM[room.mode].max_temp,
-                        state: room.state
-                    };
-                    promise.resolve(null, JSON.stringify({code: 1, room: reData}));
-                }else{
-                    Room.create(data, function(err, room){
-                        if(err){
+                Room.findOne(
+                    {room_id: 0},
+                    function(err, cRoom){
+                        if(err)
                             promise.resolve(err, JSON.stringify({code: 0, msg: err}));
-                        }else{
-                            promise.resolve(null, JSON.stringify({code: 2, room: room}));
+                        else{
+                            // 对要返回的数据reData进行处理
+                            var reData = {
+                                mode: room.mode,
+                                temp: room.temp,
+                                target_temp: cRoom.target_temp,
+                                min_temp: setM[room.mode].min_temp,
+                                max_temp: setM[room.mode].max_temp,
+                                state: room.status
+                            };
+                            promise.resolve(null, JSON.stringify({code: 1, room: reData}));
+                        }
+                    });
+                }else{
+                Room.findOne(
+                    {room_id: 0},
+                    function(err, cRoom){
+                        if(err)
+                            promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+                        else{
+                            data.target_temp=cRoom.target_temp;
+console.log(data);
+                            Room.create(data, function(err, room){
+                                if(err){
+                                    promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+                                }else{
+                                        promise.resolve(null, JSON.stringify({code: 2, room: room}));
+                                }});
                         }
                     });
                 }
@@ -144,10 +161,10 @@ model.newRecord = function(data){
     var promise = new mongoose.Promise();
     Record.create(
             {
-                record_id: RecordNum++;
-                room_id: data.room_id;
-                start_time: Date();
-                start_temp: data.temp;
+                record_id: RecordNum++,
+                room_id: data.room_id,
+                start_time: Date(),
+                start_temp: data.temp
             },
             function(err, data){
                 if(err)
@@ -184,7 +201,7 @@ model.getChange = function(data){
                 if(err){
                     promise.resolve(err, JSON.stringify({code: 0, msg: err}));
                 }
-                else if(room){
+                else if(record){
                     Room.findOne(
                         {room_id: data.room_id},
                         function(err, room){
@@ -262,30 +279,30 @@ model.setChange = function(data){
 
 
 /* 中央空调 */
-model.initConfig = function(config){
-    var promise = new mongoose.Promise();
-    Room.findOneAndUpdate(
-        {room_id: 0},
-        {$set: {
-            mode: config.model,
-            default_temp: config.default,
-            fee: config.fee;
-            ctime: Date()
-        }},
-        {safe: true, upsert: true, new : true},
-        function(err, room){
-            if(err){
-                promise.resolve(err, JSON.stringify({code: 0, msg: err}));
-            }
-            else if(room){
-                promise.resolve(null, JSON.stringify({code:2, room: room}));
-            }else{
-                promise.resolve(err, JSON.stringify({code: 0, msg: "cannot set"}));
-            }
-    });
+// model.initConfig = function(config){
+//     var promise = new mongoose.Promise();
+//     Room.findOneAndUpdate(
+//         {room_id: 0},
+//         {$set: {
+//             mode: config.model,
+//             default_temp: config.default,
+//             fee: config.fee,
+//             ctime: Date()
+//         }},
+//         {safe: true, upsert: true, new : true},
+//         function(err, room){
+//             if(err){
+//                 promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+//             }
+//             else if(room){
+//                 promise.resolve(null, JSON.stringify({code:2, room: room}));
+//             }else{
+//                 promise.resolve(err, JSON.stringify({code: 0, msg: "cannot set"}));
+//             }
+//     });
 
-    return promise;
-}
+//     return promise;
+// }
 
 model.getCenterState = function(){
     var promise = new mongoose.Promise();
@@ -293,7 +310,7 @@ model.getCenterState = function(){
         {room_id: 0},
         function(err, room){
             if(room){
-                promise.resolve(null, room.state);
+                promise.resolve(null, room.status);
             }else{
                 promise.resolve(null, 0);
             }
@@ -305,7 +322,7 @@ model.getCenterState = function(){
 model.setCenterState = function(data){
     Room.findOneAndUpdate(
         {room_id: 0},
-        {$set: {status: data.state}},
+        {$set: {status: data.status}},
         {safe: true, upsert: true, new : true},
         function(err, room){});
 }
