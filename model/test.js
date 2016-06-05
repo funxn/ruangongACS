@@ -128,7 +128,7 @@ app.post('/', function(req, res){
             console.log(data.room_id);
 
             sockTag[0] = data.room_id;
-            createSock(sockTag[0]);
+            createSock(sockTag[0], 50);
             res.end(room);
         });
     });
