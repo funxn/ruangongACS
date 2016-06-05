@@ -141,14 +141,22 @@ model.checkCost = function(data){
 
 // 创建一条record记录：
 model.newRecord = function(data){
+    var promise = new mongoose.Promise();
     Record.create(
             {
                 record_id: RecordNum++;
                 room_id: data.room_id;
                 start_time: Date();
                 start_temp: data.temp;
+            },
+            function(err, data){
+                if(err)
+                    promise.resolve(err, data);
+                else
+                    promise.resolve(null, data);
             }
-        )
+        );
+    return promise;
 }
 // 对Record记录的修改
 model.setRecord = function(data){
@@ -181,24 +189,26 @@ model.getChange = function(data){
                         {room_id: data.room_id},
                         function(err, room){
                             if(err)
-                                promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+                                promise.resolve(err, null);
                             else{
                                 var reData = {
                                     cost: room.cost,
-                                    priority: room.ctime - record.start_time,
+                                    priority: (room.ctime - record.start_time)*0.00001 + room.speed,
                                     temp: room.temp,
                                     target: room.target_temp,
-                                    speed: room.speed
+                                    speed: room.speed,
+                                    room_id:room.room_id
                                 }
-                                promise.resolve(null, JSON.stringify({code: 1, data: reData}));
+                                promise.resolve(null, reData);
                             }
                         }
                     )
                 }else{
-                    promise.resolve(err, JSON.stringify({code: 0, msg: "getChange room err"}));
+                    promise.resolve(err, null);
                 }
             }
         );
+    return promise;
 };
 model.setChange = function(data){
     Room.findOneAndUpdate(
