@@ -69,7 +69,7 @@
                 </select>
             </div>
         	<div  class="content-term-cut">
-        		<input id="btnLook" type="button" onclick="btnLookClick()" value="查看"/>
+        		<input id="btnLook" type="button" value="查看"/>
         	</div> 	
         </div>
 	</div>
@@ -77,26 +77,54 @@
 
 <script type="text/javascript" src="js/jquery.min.js"></script>
 <script language=javascript>
-	function btnLookClick() {
+	var host = "http://10.8.175.114:3000/room"; 
+	$('#btnLook').click(function() {
 		var roomIdInput = window['roomIdForm'];
+		var roomId = roomIdInput.showRoomId.value;
 		alert("已进入点击响应函数");
-		if (!roomIdInput.showRoomId.value || isNaN(roomIdInput.showRoomId.value)) {
+		if (!roomId || isNaN(roomId)) {
 			alert('请输入房间编号！');
-		}
-		else if(/*验证房间编号是否正确*/0){
-
 		}
 		else {
 			//跳转页面，显示账单或详单信息
 			if ($('#select').val() == "bill") {
-				//选中账单
+				//选择账单
+				var data_bill = {
+					room_id: roomId
+				};
+				$.post(
+					host+"/genBill",
+					JSON.stringify(data_bill),
+					function(data,status){
+						//room_id,cost
+						alert(data);
+						var getData = JSON.parse(data);
+						if (getData.code != 0) {
+							
+						}
+						//显示详单??????????????????
+					}
+					);
 			}
 			else {
 				//选中详单
+				var data_detail = {
+					room_id: roomId
+				}; 
+				$.post(
+					host+"/genDetails",
+					JSON.stringify(data_detail),
+					function(data,status){
+						//
+						alert(data);
+						var getData = JSON.parse(data);
+						//跳转页面或直接显示详单????????????????????????
+					}
+					);
 			}
 			
 		}
-	}
+	});
 </script>
 
 </html>
