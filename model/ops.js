@@ -119,6 +119,23 @@ model.set = function(data){
     return promise;
 };
 
+model.checkCost = function(data){
+    var promise = new mongoose.Promise();
+    Room.findOne(
+            {room_id: data.room_id},
+            function(err, room){
+                if(err){
+                    promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+                }
+                else if(room){
+                    promise.resolve(null, JSON.stringify({code: 1, cost: room.cost}))
+                }else{
+                    promise.resolve(err, JSON.stringify({code: 0, msg: "cannot set"}));
+                }
+        });
+
+    return promise;
+};
 
 
 
