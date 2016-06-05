@@ -112,28 +112,24 @@ console.log(data);
 // 设置风速，温度
 model.set = function(data){
     var promise = new mongoose.Promise();
-	if(data.state>=0 && data.state<=2){
-		Room.findOneAndUpdate(
-            {room_id: data.room_id},
-            {$set: {
-                target_temp: data.target,
-                speed: data.speed,
-                ctime: Date()
-            }},
-            {safe: true, upsert: true, new : true},
-            function(err, room){
-                if(err){
-                    promise.resolve(err, JSON.stringify({code: 0, msg: err}));
-                }
-                else if(room){
-                    promise.resolve(null, JSON.stringify({code: 1, room: room}));
-                }else{
-                    promise.resolve(err, JSON.stringify({code: 0, msg: "cannot set"}));
-                }
-        });
-	} else{
-		promise.resolve(null, JSON.stringify({code: 0, msg: "state 不合法"}));
-	}
+	Room.findOneAndUpdate(
+        {room_id: data.room_id},
+        {$set: {
+            target_temp: data.target,
+            speed: data.speed,
+            ctime: Date()
+        }},
+        {safe: true, upsert: true, new : true},
+        function(err, room){
+            if(err){
+                promise.resolve(err, JSON.stringify({code: 0, msg: err}));
+            }
+            else if(room){
+                promise.resolve(null, JSON.stringify({code: 1, room: room}));
+            }else{
+                promise.resolve(err, JSON.stringify({code: 0, msg: "cannot set"}));
+            }
+    });
 
     return promise;
 };
@@ -159,20 +155,30 @@ model.checkCost = function(data){
 // 创建一条record记录：
 model.newRecord = function(data){
     var promise = new mongoose.Promise();
-    Record.create(
-            {
-                record_id: RecordNum++,
-                room_id: data.room_id,
-                start_time: Date(),
-                start_temp: data.temp
-            },
-            function(err, data){
-                if(err)
-                    promise.resolve(err, data);
-                else
-                    promise.resolve(null, data);
+    Record.findOne(
+            {record_id: RecordNum-1},
+            function(err, record){
+                if(record)
+                    promise.resolve(null, record);
+                else{
+                    Record.create(
+                        {
+                            record_id: RecordNum++,
+                            room_id: data.room_id,
+                            start_time: Date(),
+                            start_temp: data.temp
+                        },
+                        function(err, data){
+                            if(err)
+                                promise.resolve(err, data);
+                            else
+                                promise.resolve(null, data);
+                        }
+                    );
+                }
             }
-        );
+        )
+    
     return promise;
 }
 // 对Record记录的修改
@@ -322,7 +328,7 @@ model.getCenterState = function(){
 model.setCenterState = function(data){
     Room.findOneAndUpdate(
         {room_id: 0},
-        {$set: {status: data.status}},
+        {$set: {status: data.state}},
         {safe: true, upsert: true, new : true},
         function(err, room){});
 }

@@ -7,9 +7,7 @@ var STATE_ON = 1;
 var STATE_WAIT = 2;
 
 var centerController = express.Router();
-centerController.get('/',function(req,res){
-    res.render('center');
-});
+
 
 
 // 接收空调管理员的post请求：配置中央空调
@@ -31,6 +29,7 @@ centerController.post('/initConfig',function(req,res){
         // 中央空调初始化设置界面：mode，default_temp，min_temp, max_temp
 
         model.initConfig(config).then(function(data){
+
             console.log(data);
             res.end(data);
         },function(err){
@@ -38,9 +37,6 @@ centerController.post('/initConfig',function(req,res){
             res.end("err!!!");
         });
     });
-
-    
-   
 });
 
 
