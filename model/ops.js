@@ -156,9 +156,9 @@ model.checkCost = function(data){
 model.newRecord = function(data){
     var promise = new mongoose.Promise();
     Record.findOne(
-            {record_id: RecordNum-1},
+            {room_id: data.room_id},
             function(err, record){
-                if(record)
+                if(record && record.end_temp!=0)
                     promise.resolve(null, record);
                 else{
                     Record.create(
@@ -178,7 +178,7 @@ model.newRecord = function(data){
                 }
             }
         )
-    
+
     return promise;
 }
 // 对Record记录的修改
