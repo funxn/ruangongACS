@@ -220,7 +220,7 @@ model.getChange = function(data){
                                     temp: room.temp,
                                     target: room.target_temp,
                                     speed: room.speed,
-                                    room_id:room.room_id
+                                    room_id: room.room_id
                                 }
                                 promise.resolve(null, reData);
                             }
