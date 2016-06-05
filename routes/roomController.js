@@ -6,7 +6,8 @@ var io = require('socket.io')(server);
 
 server.listen(8181);
 
-var sockTag = [];  // room_id,priority
+var sockTag = [];  // room_id,priority,
+var recordId = [];
 
 var sockFlag = [];
 
@@ -52,10 +53,22 @@ roomController.post('/handshake',function(req,res){
                 model.switch(handshakeData).then(function(data){
                     res.end(data);
                 });
+
+                model.newRecord(handshakeData).then(function(data){
+                    recordId[handshakeData.room_id] = data.record_id;
+                });
             } 
             else if (centerState == STATE_WAIT)          // 中央空调状态：待机
             {
                 model.setCenterState({state:STATE_ON});  // 中央空调状态更新为运行
+                model.switch(handshakeData).then(function(data){
+                    res.end(data);
+                });
+
+                model.newRecord(handshakeData).then(function(data){
+                    recordId[handshakeData.room_id] = data.record_id;
+                });
+                
             }
             else                                         // 中央空调状态：停机
             {
@@ -108,8 +121,36 @@ roomController.post('/set',function(req,res){
         console.log("从客户端发过来的数据是："+postData);
 
         var setData = JSON.parse(postData);    // 解析数据
-
+        // 返回：设置OK——room
+        model.set(setData).then(function(data){
+            res.end(data);
+        });
         // 调度
+        model.getChange({room_id: setData.room_id, record_id: recordId[setData.room_id]}).then(function(data){
+            if(sockTag.length < 3)
+            {
+                sockTag.push({room_id: data.room_id, priority: data.priority});
+                sockFlag[room_id] = true;
+                createSock(data.room_id, data.temp, data.target, data.speed, data.cost); 
+
+            }
+            else
+            {
+                // 调度，排序sockTag
+                sockTag.push({room_id: data.room_id, priority: data.priority});
+                sockTag.sort(by("priority"));
+                
+                for(var i = 0; i < 3; i++)
+                {
+                    if(sockTag[i].room_id == data.room_id){
+                       sockFlag[sockTag[i].room_id] = true;
+                       createSock(data.room_id, data.temp, data.target, data.speed, data.cost);
+                       sockFlag[sockTag[3].room_id] = false;
+                    }
+                }
+
+            }
+        });
 
     });
     
@@ -211,7 +252,7 @@ roomController.post('/checkCost',function(req,res){
 });
 
 
-function createSock(room_id, temp, target, speed){
+function createSock(room_id, temp, target, speed, cost){
     io.on('connection', function (socket) {
         socket.on('my'+room_id, function (data) {
             console.log(data);
@@ -245,18 +286,37 @@ function createSock(room_id, temp, target, speed){
             if (sockFlag[room_id] == false)   // 如果调度被中断
             {
                 // 保存当前的信息,将该房间空调挂起
-
+                model.setChange({room_id:room_id,temp:temp, target: target, speed: speed, state: 2, cost: cost});
+                socket.emit('room'+room_id, { freshTemp: temp , freshState: 2, freshCost: cost});
                 clearInterval(t);
             }
             else if(abs(temp-target) < 0.001)  // 达到目标温度
             {
                 // 修改该房间空调的状态为等待，从温控请求队列里删除，再次去调度
+                for (var i = 0; i < sockTag.length; i++)
+                {
+                    if(sockTag[i].room_id == room_id)
+                    {
+                        sockTag.splice(i,i);
+                        sockFlag[room_id] = false;
+                    }
+                }
+
+                if(sockTag.length >= 3)
+                {
+                   sockFlag[sockTag[2].room_id] = true;
+                   model.getChange({room_id: room_id, record_id: recordId[room_id]}).then(function(data){
+                   createSock(data.room_id, data.temp, data.target, data.speed, data.cost);
+                });
+                }
 
                 clearInterval(t);
             }
             else
             {
                 // 刷新信息：temp, state, cost
+                temp += det;
+                cost += abs(det);
                 socket.emit('room'+room_id, { freshTemp: temp , freshState: state, freshCost: cost});
             }
 
@@ -264,9 +324,26 @@ function createSock(room_id, temp, target, speed){
     });
 }
 
-function shedule()
-{
-
+//by函数接受一个成员名字符串做为参数
+//并返回一个可以用来对包含该成员的对象数组进行排序的比较函数
+var by = function(name){
+    return function(o, p){
+        var a, b;
+        if (typeof o === "object" && typeof p === "object" && o && p) {
+            a = o[name];
+            b = p[name];
+            if (a === b) {
+                return 0;
+            }
+            if (typeof a === typeof b) {
+                return a < b ? -1 : 1;
+            }
+            return typeof a < typeof b ? -1 : 1;
+        }
+        else {
+            throw ("error");
+        }
+    }
 }
 
 // 导出router作为一个模块，供app.js调用
