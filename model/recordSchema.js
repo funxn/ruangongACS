@@ -6,8 +6,8 @@ var Schema = mongoose.Schema;
 var recordSchema = new Schema({
 	record_id : {type : Number, default: 0, index: true},
 	room_id : {type : Number, default: 0, unique: true},
-	start_time: {type: Number, default: 25},
-	end_time: {type: Number, default: 0},
+	start_time: {type: Date, default: 25},
+	end_time: {type: Date, default: 0},
 	start_temp: {type: Number, default: 25},
 	end_temp: {type: Number, default: 0},
 	power: {type: Number, default: 0}

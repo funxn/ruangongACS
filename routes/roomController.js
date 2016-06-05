@@ -21,9 +21,6 @@ var MODE_COLD = 0;
 var MODE_HOT = 1;
 
 var roomController = express.Router();
-roomController.get('/',function(req,res){
-    res.render('room');
-});
 
 
 // 接收房间空调请求：开机
@@ -63,12 +60,15 @@ roomController.post('/handshake',function(req,res){
             {
                 model.setCenterState({state:STATE_ON});  // 中央空调状态更新为运行
                 model.switch(handshakeData).then(function(data){
+
+                    model.newRecord(handshakeData).then(function(data){
+                        recordId[handshakeData.room_id] = data.record_id;
+                    }, function(err){console.log("newRecord err");});
+
                     res.end(data);
                 });
 
-                model.newRecord(handshakeData).then(function(data){
-                    recordId[handshakeData.room_id] = data.record_id;
-                });
+                
                 
             }
             else                                         // 中央空调状态：停机
@@ -123,35 +123,36 @@ roomController.post('/set',function(req,res){
 
         var setData = JSON.parse(postData);    // 解析数据
         // 返回：温控请求OK——room
+        model.getChange({room_id: setData.room_id, record_id: recordId[setData.room_id]}).then(function(data){
+                if(sockTag.length < 3)
+                {             
+                    sockTag.push({room_id:data.room_id, priority: data.priority});
+                    sockFlag[data.room_id] = true;
+                    createSock(data.room_id, data.temp, data.target, data.speed, data.cost);
+                }
+                else
+                {
+                    // 请求队列更新
+                    // 调度：排序sockTag
+                    sockTag.push({room_id: data.room_id, priority: data.priority});
+                    sockTag.sort(by("priority"));
+                    
+                    for(var i = 0; i < 3; i++)
+                    {
+                        if(sockTag[i].room_id == data.room_id){
+                           sockFlag[sockTag[i].room_id] = true;
+                           createSock(data.room_id, data.temp, data.target, data.speed, data.cost);
+                           sockFlag[sockTag[3].room_id] = false;
+                        }
+                    }
+
+                }
+            });
         model.set(setData).then(function(data){
             res.end(data);
         });
         // 调度
-        model.getChange({room_id: setData.room_id, record_id: recordId[setData.room_id]}).then(function(data){
-            if(sockTag.length < 3)
-            {
-                sockTag.push({room_id:data.room_id, priority: data.priority});
-                sockFlag[room_id] = true;
-                createSock(data.room_id, data.temp, data.target, data.speed, data.cost); 
-            }
-            else
-            {
-                // 请求队列更新
-                // 调度：排序sockTag
-                sockTag.push({room_id: data.room_id, priority: data.priority});
-                sockTag.sort(by("priority"));
-                
-                for(var i = 0; i < 3; i++)
-                {
-                    if(sockTag[i].room_id == data.room_id){
-                       sockFlag[sockTag[i].room_id] = true;
-                       createSock(data.room_id, data.temp, data.target, data.speed, data.cost);
-                       sockFlag[sockTag[3].room_id] = false;
-                    }
-                }
-
-            }
-        });
+        
 
     });
     
@@ -241,17 +242,17 @@ function createSock(room_id, temp, target, speed, cost){
             {
                 // 保存当前的信息,将该房间空调挂起
                 model.setChange({room_id:room_id,temp:temp, target: target, speed: speed, state: 2, cost: cost});
-                socket.emit('room'+room_id, JSON.stringify({ freshTemp: temp , freshState: 2, freshCost: cost}));
+                socket.emit('room'+room_id, JSON.stringify({ temp: temp , state: 2, cost: cost}));
                 clearInterval(t);
             }
-            else if(abs(temp-target) < 0.001)  // 达到目标温度
+            else if(Math.abs(temp-target) <= 0.001)  // 达到目标温度
             {
                 // 修改该房间空调的状态为等待，从温控请求队列里删除，再次去调度
                 for (var i = 0; i < sockTag.length; i++)
                 {
                     if(sockTag[i].room_id == room_id)
                     {
-                        sockTag.splice(i,i);
+                        sockTag.splice(i,1);
                         sockFlag[room_id] = false;
                     }
                 }
@@ -259,7 +260,7 @@ function createSock(room_id, temp, target, speed, cost){
                 if(sockTag.length >= 3)
                 {
                    sockFlag[sockTag[2].room_id] = true;
-                   model.getChange({room_id: room_id, record_id: recordId[room_id]}).then(function(data){
+                   model.getChange({room_id: sockTag[2].room_id, record_id: recordId[sockTag[2].room_id]}).then(function(data){
                    createSock(data.room_id, data.temp, data.target, data.speed, data.cost);
                 });
                 }
@@ -270,8 +271,8 @@ function createSock(room_id, temp, target, speed, cost){
             {
                 // 刷新信息：temp, state, cost
                 temp += det;
-                cost += abs(det);
-                socket.emit('room'+room_id, JSON.stringify({ freshTemp: temp , freshState: state, freshCost: cost}));
+                cost += Math.abs(det);
+                socket.emit('room'+room_id, JSON.stringify({ temp: temp , state: 1, cost: cost}));
             }
 
         }, 6000);
