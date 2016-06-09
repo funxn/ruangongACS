@@ -18,11 +18,22 @@ var setM = [
      max_temp: 30}
 ];
 
-//找到record_id字段的最大值,如没找到默认RecordNum = 1;
-if(!(RecordNum= Record.find().sort({rand:-1}).limit(1).record_id))
-    RecordNum = 1;
+var RecordNum;
 
-console.log(RecordNum);
+//找到record_id字段的最大值,如没找到默认RecordNum = 1; .limit(1).record_id
+Record.find({}, function(err, records){
+    console.log(records);
+    RecordNum = 0;
+    if(records){
+        for(i=0; i<records.length; i++){
+            if(records[i].record_id > RecordNum)
+                RecordNum = records[i].record_id;
+        }
+    }
+
+    console.log(++RecordNum);
+});
+
 
 // 开关空调
 model.switch = function(data){
@@ -48,7 +59,8 @@ model.switch = function(data){
                             speed: cRoom.speed,
                             min_temp: setM[cRoom.mode].min_temp,
                             max_temp: setM[cRoom.mode].max_temp,
-                            state: room.status
+                            state: room.status,
+                            cost: room.cost
                         };
                         promise.resolve(null, reData);
                     }
@@ -84,7 +96,7 @@ model.initSetting = function(data){
         {$set: {
             target_temp: data.target,
             speed: data.speed,
-            ctime: Date()
+            ctime: new Date().getTime()
         }},
         {safe: true, upsert: true, new : true},
         function(err, room){
@@ -164,7 +176,7 @@ model.newRecord = function(data){
         {
             record_id: RecordNum++,
             room_id: data.room_id,
-            //start_time: Date().getTime(),         // 数据库中已有Date.now和Date.now()
+            start_time: new Date().getTime(),         // 数据库中已有Date.now和Date.now()
             end_temp: data.temp,
             power: data.cost
         },
@@ -184,8 +196,8 @@ model.setRecord = function(data){
     Record.findOneAndUpdate(
         {record_id: data.record_id},
         {$set: {
-                end_time: Date(),
-                end_temp: data.temp,
+                end_time: new Date().getTime(),
+                end_temp: data.end_temp,
                 power: data.power}},
         {safe: true, upsert: true, new : true},
         function(err, record){
@@ -199,36 +211,36 @@ model.setRecord = function(data){
 model.getPriority = function(data){
     var promise = new mongoose.Promise();
     Record.findOne(
-            {record_id: data.record_id},
-            function(err, record){
-                if(err){
-                    promise.resolve(err, JSON.stringify({code: 0, msg: err}));
-                }
-                else if(record){
-                    Room.findOne(
-                        {room_id: data.room_id},
-                        function(err, room){
-                            if(err)
-                                promise.resolve(err, null);
-                            else{
-                                var reData = {
-                                    cost: room.cost,
-                                    priority: (room.ctime - record.start_time)*0.0000001 + room.speed,
-                                    temp: room.temp,
-                                    target: room.target_temp,
-                                    speed: room.speed,
-                                    room_id: room.room_id,
-                                    state: room.status
-                                }
-                                promise.resolve(null, reData);
-                            }
-                        }
-                    )
-                }else{
-                    promise.resolve(err, null);
-                }
+        {record_id: data.record_id},
+        function(err, record){
+            if(err){
+                promise.resolve(err, JSON.stringify({code: 0, msg: err}));
             }
-        );
+            else if(record){
+                Room.findOne(
+                    {room_id: data.room_id},
+                    function(err, room){
+                        if(err)
+                            promise.resolve(err, null);
+                        else{
+                            var reData = {
+                                cost: room.cost,
+                                priority: (room.ctime - record.start_time)*0.0000001 + room.speed,
+                                temp: room.temp,
+                                target: room.target_temp,
+                                speed: room.speed,
+                                room_id: room.room_id,
+                                state: room.status
+                            }
+                            promise.resolve(null, reData);
+                        }
+                    }
+                )
+            }else{
+                promise.resolve(err, null);
+            }
+        }
+    );
     return promise;
 };
 // 对于调度时修改保存的值的设置：
@@ -242,7 +254,7 @@ model.setChange = function(data){
             speed: data.speed,
             status: data.state,
             cost: data.cost,
-            ctime: Date()
+            ctime: new Date().getTime()
         }},
         {safe: true, upsert: true, new : true},
         function(err, data){
@@ -306,7 +318,7 @@ model.newOperation = function(data){
 //             console.log(data.state);
 //         Room.findOneAndUpdate(
 //             {room_id: data.room_id},
-//             {$set: {status: data.state, ctime: Date(), mode: data.mode}},
+//             {$set: {status: data.state, ctime: new Date().getTime(), mode: data.mode}},
 //             {safe: true, upsert: true, new : true},
 //             function(err, room){
 //                 if(room){
@@ -328,7 +340,64 @@ model.newOperation = function(data){
 //     return promise;
 // };
 
+/* 报表 */
+model.genReport = function(opt){
+    if(opt == "daily"){
+        beginDate = new Date().getTime() - 24*60*60*1000;
+    }else if(opt == "weekly"){
+        beginDate = new Date().getTime() - 7*24*60*60*1000;
+    }else if(opt == "monthly"){
+        beginDate = new Date().getTime() - 30*24*60*60*1000;
+    }
 
+    var promise = new mongoose.Promise();
+    Record.find(
+        {end_time: {$gte: beginDate}},
+        function(err, records) {
+            if(err)
+                promise.resolve(err, null);
+            else
+                promise.resolve(null, records);
+        }
+    );
+    return promise;
+};
+
+
+/* 前台 : 查看账单， 查看详单： */
+model.genBill = function(data){
+    var promise = new mongoose.Promise();
+    Record.find(
+        {room_id: data.room_id},
+        function(err, records){
+            if(err)
+                promise.resolve(err, null);
+            else{
+                var temp_cost = 0;
+                for(i=0; i<records.length; i++)
+                    temp_cost += records[i].power;
+                promise.resolve(null, {room_id: data.room_id, cost: temp_cost});
+            }
+        }
+    );
+    return promise;
+};
+
+
+model.genDetails = function(data){
+    var promise = new mongoose.Promise();
+    Record.find(
+        {room_id: data.room_id},
+        function(err, records){
+            if(err)
+                promise.resolve(err, null);
+            else{
+                promise.resolve(null, records);
+            }
+        }
+    );
+    return promise;
+};
 
 
 
@@ -342,7 +411,7 @@ model.initConfig = function(data){
         {room_id: 0},
         {$set: {
             mode: data.mode,
-            ctime: Date(),
+            ctime: new Date().getTime(),
             target_temp: data.default_temp,
             fee: data.fee
             // min_temp: setM[data.mode].min_temp,

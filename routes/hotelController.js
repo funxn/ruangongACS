@@ -15,25 +15,25 @@ hotelController.get('/',function(req,res){
 // 酒店管理员请求：查看日报表
 hotelController.get('/dailyReport', function(req, res){
     res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-     model.report("daily").then(function(data){
-        res.end(JSON.stringify(data));
-    });
+     model.genReport("daily").then(function(data){
+        res.end(JSON.stringify({code: 1, data: data}));
+    }, function(err){ res.end(JSON.stringify({code: 0, err: "genReport error: "+err}))});
 });
 
 // 酒店管理员请求：查看周报表
 hotelController.get('/weeklyReport', function(req, res){
     res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-     model.report("weekly").then(function(data){
-        res.end(JSON.stringify(data));
-    });
+     model.genReport("weekly").then(function(data){
+        res.end(JSON.stringify({code: 1, data: data}));
+    }, function(err){ res.end(JSON.stringify({code: 0, err: "genReport error: "+err}))});
 });
 
 // 酒店管理员请求：查看月报表
 hotelController.get('/monthlyReport', function(req, res){
     res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-    model.report("monthly").then(function(data){
-        res.end(JSON.stringify(data));
-    });
+    model.genReport("monthly").then(function(data){
+        res.end(JSON.stringify({code: 1, data: data}));
+    }, function(err){ res.end(JSON.stringify({code: 0, err: "genReport error: "+err}))});
 });
 
 // 分析图~以后再说

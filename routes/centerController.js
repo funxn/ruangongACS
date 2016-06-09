@@ -72,14 +72,14 @@ centerController.post('/switch',function(req,res){
 
 // 接收空调管理员的get请求:监控空调信息
 // model: 中央空调——
-centerController.get('/checkAir',function(req,res){
+// centerController.get('/checkAir',function(req,res){
 
-    res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-    // 一直推送信息，需要怎样子实时获取中央空调和房间空调的信息
-    model.checkAir().then(function(data){
-        res.end(data);
-    },function(err){res.end(data)});
-});
+//     res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
+//     // 一直推送信息，需要怎样子实时获取中央空调和房间空调的信息
+//     model.checkAir().then(function(data){
+//         res.end(data);
+//     },function(err){res.end(data)});
+// });
 
 
 // 导出centerController作为一个模块，供app.js调用

@@ -11,7 +11,7 @@ var roomSchema = new Schema({
 	speed: {type: Number, default: 0},
 	temp: {type: Number, default: 0},
 	status: {type: Number, default: 0},
-	ctime: {type: Date, default: Date.now},
+	ctime: {type: Number, default: 0},
     fee: {type: Number, default: 0}
 });
 

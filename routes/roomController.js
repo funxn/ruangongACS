@@ -90,7 +90,7 @@ roomController.post('/shutdown',function(req,res){
         model.switch(shutdownData).then(function(data){
             res.end(JSON.stringify({code: 1, data: data}));
             // 每次有修改都要set一下对应的数据库的记录，包括关机
-            model.setRecord(shutdownData);
+            model.setRecord({record_id: recordId[data.room_id], end_temp: shutdownData.temp, power: data.cost});
             // 删除sockTag, canrunFlag元素
             for(i=0; i<sockTag.length; i++)
                 if(sockTag[i].room_id == shutdownData.room_id){

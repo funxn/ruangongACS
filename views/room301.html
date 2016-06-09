@@ -242,7 +242,7 @@
             target: temp,
             speed: toGetSpeed()
         };
-        var t= setInterval(function(){
+        t= setInterval(function(){
             $.post(
             host+"/run",
             JSON.stringify(data),
@@ -323,8 +323,8 @@
         else {
             var data_off = {
                 room_id: ROOM_ID,
-                state: STATE_OFF
-                //temp: parseInt($('#showCurrentTemp').text())
+                state: STATE_OFF,
+                temp: parseFloat($('#showCurrentTemp').text())
             };
             clearInterval(t1);
             clearInterval(t);
