@@ -58,7 +58,7 @@
 		width: 300px;
 		height: 175px;
 		background: #FFFACD;
-		margin-left:375px;	
+		margin-left:375px;
 	}
 	.room4{
 		width: 300px;
@@ -71,7 +71,7 @@
 		height: 30px;
 		background: #E9967A;
 		margin-left:0px;
-		text-align:center;	
+		text-align:center;
 		vertical-align:middle;
 		line-height:30px;
 	}
@@ -79,7 +79,7 @@
 		width: 260px;
 		height: 20px;
 		background: #FFFACD;
-		margin-left:40px;	
+		margin-left:40px;
 	}
 	.roomContentTitle{
 		width: 130px;
@@ -117,7 +117,7 @@
 		width: 324px;
 		height: 50px;
 		background: #FFDAB9;
-		text-align:center;	
+		text-align:center;
 		vertical-align:middle;
 		line-height:50px;
 	}
@@ -132,7 +132,7 @@
 		width: 80px;
 		height: 40px;
 		background: #FFDAB9;
-		text-align:center;	
+		text-align:center;
 		vertical-align:middle;
 		line-height:40px;
 		margin-left:100px;
@@ -197,7 +197,7 @@
 			        	<b id="room2-Id"></b>
 			        </div>
 			        <div>
-			        	<div class="roomContent">		        		
+			        	<div class="roomContent">
 			        	</div>
 			        	<div class="roomContent">
 			        	    <div class="roomContentTitle">
@@ -240,8 +240,8 @@
 			        </div>
 			        <div>
 			        	<div class="roomContent">
-			        	    <div class="roomContentTitle">			    
-			                </div>			        		
+			        	    <div class="roomContentTitle">
+			                </div>
 			        	</div>
 			        	<div class="roomContent">
 			        	    <div class="roomContentTitle">
@@ -282,8 +282,8 @@
 			        </div>
 			        <div>
 			        	<div class="roomContent">
-			        	    <div class="roomContentTitle">			            
-			                </div>			        		
+			        	    <div class="roomContentTitle">
+			                </div>
 			        	</div>
 			        	<div class="roomContent">
 			        	    <div class="roomContentTitle">
@@ -351,7 +351,7 @@
 	</div>
 </body>
 
-<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="../public/js/jquery.min.js"></script>
 <script type="text/javascript">
 
     var STATE_OFF = 0;
@@ -362,7 +362,7 @@
     var SPEED_LOW = 0;
     var SPEED_M = 1;
     var SPEED_HIGH = 2;
-    var host = "http://10.8.57.137:3000/center";  
+    var host = "http://localhost:3000/center";
 
     //判断类型显示汉字或得到类型变量
 	function toShowMode(mode) {
@@ -436,6 +436,7 @@
             });
         }
     //点击开关按钮
+    var t;
     $('#btnCACOnOff').click(function(){
     	if (toGetState($('#cacState').text()) == STATE_OFF) {
     		//开机
@@ -452,6 +453,15 @@
     				var getData = JSON.parse(data);
     				if (getData.code != 0) {
     					//startClientSock();
+                        t=setInterval(function(){
+                            $.get(host+"/checkAir", function(data){
+                                if(data.code!=0){
+                                    alert(data);
+                                }else{
+                                    alert(data);
+                                }
+                            })
+                        }, 2000);
     				}
     				else {
     					alert('数据接收失败');
@@ -459,7 +469,7 @@
     			}
     			);
     	}
-    	else {  
+    	else {
     	    //关机
     		var data_off = {
 

@@ -1,13 +1,13 @@
-// Customer : 顾客实体
+// Record : 对房间操作的记录
 
 var mongoose = require('./db.js');
 var Schema = mongoose.Schema;
 
 var recordSchema = new Schema({
-	record_id : {type : Number, default: 0, index: true},
-	room_id : {type : Number, default: 0, unique: true},
-	start_time: {type: Date, default: 25},
-	end_time: {type: Date, default: 0},
+	record_id : {type : Number, default: 0},
+	room_id : {type : Number, default: -1},
+	start_time: {type: Date, default: Date.now()},
+	end_time: {type: Date, default: Date.now},
 	start_temp: {type: Number, default: 25},
 	end_temp: {type: Number, default: 0},
 	power: {type: Number, default: 0}

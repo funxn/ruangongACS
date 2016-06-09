@@ -4,6 +4,7 @@ var ejs = require('ejs');
 var app = express();
 
 // 控制器：以角色分配（严格点：以基本用例来写）
+var routes = require('./routes/index.js');
 var centerController = require('./routes/centerController');   // 中央空调管理员控制器
 var roomController = require('./routes/roomController');	   // 房间空调控制器
 // var counterController = require('./routes/counterController'); // 前台控制器
@@ -18,10 +19,10 @@ var routes = require('./routes/index');
 app.set('views', './views');
 app.use(express.static(path.join(__dirname, 'public')));
 app.engine('html', require('ejs').renderFile);
-
 app.set('view engine', 'html');
 
 // 以下定义路由处理的顺序：
+app.use('/', routes);
 app.use('/center', centerController);
 app.use('/room',roomController);
 // app.use('/counter',counterController);
