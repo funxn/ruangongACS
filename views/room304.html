@@ -120,6 +120,7 @@
     var STATE_OFF = 0;
     var STATE_ON = 1;
     var STATE_WAIT = 2;     // 待机：本地调控
+    var STATE_SCHEDULE = 3; // 调度中
     var MODE_COLD = 0;      // 制冷模式
     var MODE_HOT = 1;       // 制热模式
     var SPEED_LOW = 0;
@@ -149,6 +150,8 @@
         }
         else if (state == STATE_WAIT) {
             return '待机';
+        }else if(state == STATE_SCHEDULE){
+            return '调度中'
         }
     }
     function toShowSpeed(speed) {
@@ -201,7 +204,7 @@
     //房间空调待机时温度变化
     var t1, t;              // 突然停机时停止调度
     function sacTempChange() {
-        $('#showState').text(toGetState(STATE_WAIT));  //状态修改为待机
+        //$('#showState').text(toGetState(STATE_WAIT));  //状态修改为待机
 
         var target = parseInt($('#showAimTemp').text());
         var temp = parseInt($('#showCurrentTemp').text());
@@ -221,10 +224,11 @@
 
                 var data = {
                     room_id :ROOM_ID,
-                    temp: temp
+                    temp: temp,
+                    speed: toGetSpeed()
                 };
                 $.post(
-                    host+"/changed",
+                    host+"/run",
                     JSON.stringify(data),
                     function(data,status){
                         alert(data);
@@ -247,7 +251,7 @@
             target: temp,
             speed: toGetSpeed()
         };
-        var t= setInterval(function(){
+        t= setInterval(function(){
             $.post(
             host+"/run",
             JSON.stringify(data),
@@ -277,7 +281,7 @@
                         break;
                     case 3:
                         alert("进入调度队列排队状态");
-                        $('#showState').text("等待中央空调调度中");
+                        $('#showState').text(toShowState(getData.data.status));
                         break;
                     default:
                         alert("返回的code不合法");
@@ -328,8 +332,8 @@
         else {
             var data_off = {
                 room_id: ROOM_ID,
-                state: STATE_OFF
-                //temp: parseInt($('#showCurrentTemp').text())
+                state: STATE_OFF,
+                temp: parseFloat($('#showCurrentTemp').text())
             };
             clearInterval(t1);
             clearInterval(t);
