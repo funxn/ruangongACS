@@ -40,8 +40,8 @@ model.switch = function(data){
     var promise = new mongoose.Promise();
     Room.findOneAndUpdate(
         {room_id: data.room_id},
-        {$set: {status: data.state, ctime: new Date().getTime(), temp: data.temp}},
-        {safe: true, upsert: true, new : true},
+        {$set: {status: data.state, ctime: new Date().getTime(), temp:data.temp}},
+        {safe: true, upsert: true, new: true},
         function(err, room){
             //若是为中央空调，直接返回
             if(room&&room.room_id == 0){
@@ -301,6 +301,18 @@ model.setState = function(data){
         {$set: {status: data.state}},
         function(err,data){if(err){console.log("setState error: "+err);}}
     );
+}
+
+//专门getRoomState的model：
+model.getState = function(data){
+    var promise = new mongoose.Promise();
+    Room.findOne({room_id: data.room_id}, function(err, data){
+        if(err)
+            promise.resolve(err, null);
+        else
+            promise.resolve(null, data);
+    });
+    return promise;
 }
 // room shutdown后，删除掉这个room的记录
 model.delRoom = function(data){

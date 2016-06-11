@@ -5,101 +5,108 @@
 </head>
 
 <font id="title" size="6" color="#ffffff"><pre>                  房间空调控制面板</pre></font>
-<body bgcolor="#666666" leftmargin="0" topmargin="0" marginwidth="300" marginheight="100" text-align:center>
-<!-- Save for Web Slices (全蓝背景—切片1.psd) -->
-<table id="__01" width="684" height="364" border="0" cellpadding="0" cellspacing="0">
+<body bgcolor="#333333" leftmargin="0" topmargin="0" marginwidth="300" marginheight="100" text-align:center>
+<!-- Save for Web Slices (无标题.png) -->
+<table id="__01" width="721" height="421" border="0" cellpadding="0" cellspacing="0">
     <tr>
-        <td colspan="5">
-            <div style="background:url(images/room4_01.gif) no-repeat;width:683px;height:48px;text-align:center;vertical-align:middle;line-height:48px">
-                <b id="no">编号:</b>
-                <b id="roomId"></b>
+        <td colspan="4">
+            <input id="btnOnOff" type="image" src="images302/room2_01.gif" alt="" width="361" height="91"></td>           
+        <td colspan="3">
+            <div style="background:url(images302/room2_02.gif) no-repeat;width:359px;height:91px;text-align:center;vertical-align:middle;line-height:91px">       
                 <b>空调状态:</b>
                 <b id="showState">停机</b>
             </div></td>
         <td>
-            <img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="48" alt=""></td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="91" alt=""></td>
     </tr>
     <tr>
-        <td>
-            <div style="background:url(images/room4_02.gif) no-repeat;width:153px;height:41px;text-align:center;vertical-align:middle;line-height:41px">
+        <td rowspan="2">
+            <div style="background:url(images302/room2_03.gif) no-repeat;width:140px;height:121px;text-align:center;vertical-align:middle;line-height:121px">
                 <b id="currentTemp" >当前温度(度)</b>
             </div></td>
-        <td>
-            <div style="background:url(images/room4_03.gif) no-repeat;width:149px;height:41px;text-align:center;vertical-align:middle;line-height:41px">
-                <b id="aimTemp" >目标温度(度)</b>
+        <td colspan="2" rowspan="2">
+            <div style="background:url(images302/room2_04.gif) no-repeat;width:141px;height:121px;text-align:center;vertical-align:middle;line-height:121px">
+                <font id="showCurrentTemp" size="6"></font>
             </div></td>
-        <td rowspan="3">
-            <input id="btnUp" type="image" src="images/room4_04.gif" alt="" width="102" height="74"/></td>
-        <td>
-            <div style="background:url(images/room4_05.gif) no-repeat;width:172px;height:41px;text-align:center;vertical-align:middle;line-height:41px">
+        <td rowspan="2">
+            <input id="btnUp" type="image" src="images302/room2_05.gif" alt="" width="80" height="121"/></td>
+        <td rowspan="2">
+            <div style="background:url(images302/room2_06.gif) no-repeat;width:139px;height:121px;text-align:center;vertical-align:middle;line-height:121px">
                 <b id="speed" >风速</b>
             </div></td>
         <td rowspan="2">
-            <input id="btnHigh" type="image" src="images/room4_06.gif" alt="" width="107" height="53" ></td>
-        <td>
-            <img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="41" alt=""></td>
-    </tr>
-    <tr>
-        <td rowspan="4">
-            <div style="background:url(images/room4_07.gif) no-repeat;width:153px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
-                <font id="showCurrentTemp" size="6"></font>
-            </div></td>
-        <td rowspan="4">
-            <div style="background:url(images/room4_08.gif) no-repeat;width:149px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
-                <font id="showAimTemp" size="6"></font>
-            </div></td>
-        <td rowspan="4">
-            <div style="background:url(images/room4_09.gif) no-repeat;width:172px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
+            <div style="background:url(images302/room2_07.gif) no-repeat;width:141px;height:121px;text-align:center;vertical-align:middle;line-height:121px">
                 <font id="showSpeed" size="6"></font>
             </div></td>
         <td>
-            <img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="12" alt=""></td>
+            <input id="btnHigh" type="image" src="images302/room2_08.gif" alt="" width="79" height="80" ></td>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="80" alt=""></td>
     </tr>
     <tr>
         <td rowspan="2">
-            <input id="btnM" type="image" src="images/room4_10.gif" alt="" width="107" height="51"></td>
+            <input id="btnM" type="image" src="images302/room2_09.gif" alt="" width="79" height="80"></td>
         <td>
-            <img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="21" alt=""></td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="41" alt=""></td>
     </tr>
     <tr>
         <td rowspan="2">
-            <input id="btnDown" type="image" src="images/room4_11.gif" alt="" width="102" height="86"></td>
-        <td>
-            <img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="30" alt=""></td>
-    </tr>
-    <tr>
-        <td>
-            <input id="btnLow" type="image" src="images/room4_12.gif" alt="" width="107" height="56"></td>
-        <td>
-            <img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="56" alt=""></td>
-    </tr>
-    <tr>
-        <td>
-            <div style="background:url(images/room4_13.gif) no-repeat;width:153px;height:38px;text-align:center;vertical-align:middle;line-height:38px">
+            <div style="background:url(images302/room2_10.gif) no-repeat;width:140px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
+                <b id="aimTemp" >目标温度(度)</b>
+            </div></td>
+        <td colspan="2" rowspan="2">
+            <div style="background:url(images302/room2_11.gif) no-repeat;width:141px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
+                <font id="showAimTemp" size="6"></font>
+            </div></td>
+        <td rowspan="2">
+            <input id="btnDown" type="image" src="images302/room2_12.gif" alt="" width="80" height="119"/></td>
+        <td rowspan="2">
+            <div style="background:url(images302/room2_13.gif) no-repeat;width:139px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
                 <b id="mode" >工作模式</b>
             </div></td>
-        <td>
-            <div style="background:url(images/room4_14.gif) no-repeat;width:149px;height:38px;text-align:center;vertical-align:middle;line-height:38px">
-                <b id="cost" >当前消费(元)</b>
-            </div></td>
         <td rowspan="2">
-            <input id="btnLook" type="image" src="images/room4_15.gif" alt="" width="102" height="156"></td>
-        <td colspan="2" rowspan="2">
-            <input id="btnOnOff" type="image" src="images/room4_16.gif" alt="" width="279" height="156"></td>
-        <td>
-            <img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="38" alt=""></td>
-    </tr>
-    <tr>
-        <td>
-            <div style="background:url(images/room4_17.gif) no-repeat;width:153px;height:118px;text-align:center;vertical-align:middle;line-height:118px">
+            <div style="background:url(images302/room2_14.gif) no-repeat;width:141px;height:119px;text-align:center;vertical-align:middle;line-height:119px">
                 <font id="showMode" size="6"></font>
             </div></td>
         <td>
-            <div style="background:url(images/room4_18.gif) no-repeat;width:149px;height:118px;text-align:center;vertical-align:middle;line-height:118px">
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="39" alt=""></td>
+    </tr>
+    <tr>
+        <td>
+            <input id="btnLow" type="image" src="images302/room2_15.gif" alt="" width="79" height="80"></td>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="80" alt=""></td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <div style="background:url(images302/room2_16.gif) no-repeat;width:179px;height:89px;text-align:center;vertical-align:middle;line-height:89px">
+                <b id="cost" >当前消费(元)</b>
+            </div></td>
+        <td colspan="2">
+            <div style="background:url(images302/room2_17.gif) no-repeat;width:182px;height:89px;text-align:center;vertical-align:middle;line-height:89px">
                 <font id="showCost" size="6"></font>
             </div></td>
+        <td colspan="3">
+            <input id="btnLook" type="image" src="images302/room2_18.gif" alt="" width="359" height="89"></td>
         <td>
-            <img src="images/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="118" alt=""></td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="1" height="89" alt=""></td>
+    </tr>
+    <tr>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="140" height="1" alt=""></td>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="39" height="1" alt=""></td>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="102" height="1" alt=""></td>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="80" height="1" alt=""></td>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="139" height="1" alt=""></td>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="141" height="1" alt=""></td>
+        <td>
+            <img src="images302/&#x5206;&#x9694;&#x7b26;.gif" width="79" height="1" alt=""></td>
+        <td></td>
     </tr>
 </table>
 <!-- End Save for Web Slices -->
@@ -121,7 +128,7 @@
     var SPEED_LOW = 0;
     var SPEED_M = 1;
     var SPEED_HIGH = 2;
-    var host = "http://localhost:3000/room";
+    var host = "http://192.168.1.100:3000/room";
     var t;
     $('#roomId').text(ROOM_ID);
 
@@ -276,7 +283,7 @@
                         break;
                     case 3:
                         alert("进入调度队列排队状态");
-                        $('#showState').text("等待中央空调调度中");
+                        $('#showState').text(toShowState(getData.data.status));
                         break;
                     default:
                         alert("返回的code不合法");

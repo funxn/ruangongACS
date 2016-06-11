@@ -205,7 +205,6 @@ roomController.post('/run',function(req,res){
                                imRecord[recordId[sockTag[3].room_id]].scheduleCount++;
                                imRecord[recordId[sockTag[3].room_id]].serveTime = new Date().getTime()
                                 - imRecord[recordId[sockTag[3].room_id]].serveStartTime;
-                               model.setState({room_id: sockTag[3].room_id, state: 2});
                                // 空调进入运行态
                                res.end(JSON.stringify({code:1, data: data}));
                             }
@@ -240,7 +239,6 @@ roomController.post('/run',function(req,res){
                            imRecord[recordId[sockTag[3].room_id]].scheduleCount++;
                            imRecord[recordId[sockTag[3].room_id]].serveTime = new Date().getTime()
                             - imRecord[recordId[sockTag[3].room_id]].serveStartTime;
-                           model.setState({room_id: sockTag[3].room_id, state: 2});
                         }
                 for(i=0; i<sockTag.length; i++){
                     if(sockTag[i].room_id == data.room_id){
@@ -275,9 +273,11 @@ roomController.post('/run',function(req,res){
                                 }, function(err){ res.end(JSON.stringify({code:0, err:"run error: "+err}))});
                             }
                         }
-                        // 否则就是等待调控态
+                        // 否则就是调度中态
                         else{
-                            res.end(JSON.stringify({code:3, data:null}));
+                            model.getState({room_id: data.room_id}).then(function(data){
+                                res.end(JSON.stringify({code:3, data:data}));
+                            }, function(err){ res.end(JSON.stringify({code:0, err:"getState error: "+err}))});
                         }
                     }
                 }
