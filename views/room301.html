@@ -460,10 +460,11 @@
         var temp = $('#showCurrentTemp').text();
         var target_temp = $('#showAimTemp').text();
         target_temp++;
-        if((target_temp > temp && toGetMode()==0) || (target_temp < temp && toGetMode() == 1)){
-            alert('该模式下目标温度与当前温度已接近适宜，无需调控');
-        }
-        else if (target_temp >= window.min_temp && target_temp <= window.max_temp) {
+        // if((target_temp > temp && toGetMode()==0) || (target_temp < temp && toGetMode() == 1)){
+        //     alert('该模式下目标温度与当前温度已接近适宜，无需调控');
+        // }
+        // else 
+        if (target_temp >= window.min_temp && target_temp <= window.max_temp) {
             $('#showAimTemp').text(target_temp); //在发送前显示还是接受后？？？
             changeTemp(target_temp);
             //alert(temp);
@@ -480,10 +481,11 @@
         var temp = $('#showCurrentTemp').text();
         var target_temp = $('#showAimTemp').text();
         target_temp--;
-        if((target_temp > temp && toGetMode()==0) || (target_temp < temp && toGetMode() == 1)){
-            alert('该模式下目标温度与当前温度已接近适宜，无需调控');
-        }
-        else if (target_temp >= window.min_temp && target_temp <= window.max_temp) {
+        // if((target_temp > temp && toGetMode()==0) || (target_temp < temp && toGetMode() == 1)){
+        //     alert('该模式下目标温度与当前温度已接近适宜，无需调控');
+        // }
+        // else 
+        if (target_temp >= window.min_temp && target_temp <= window.max_temp) {
             $('#showAimTemp').text(target_temp); //在发送前显示还是接受后？？？
             changeTemp(target_temp);
             //alert(temp);
