@@ -43,46 +43,53 @@ model.switch = function(data){
         {$set: {status: data.state, ctime: new Date().getTime(), temp: data.temp}},
         {safe: true, upsert: true, new : true},
         function(err, room){
-            if(room){
-            Room.findOne(
-                {room_id: 0},
-                function(err, cRoom){
-                    if(err)
-                        promise.resolve(err, null);
-                    else{
-                        // 对要返回的数据reData进行处理
-                        var reData = {
-                            room_id: room.room_id,
-                            mode: room.mode,
-                            temp: room.temp,
-                            target: cRoom.target_temp,
-                            speed: cRoom.speed,
-                            min_temp: setM[cRoom.mode].min_temp,
-                            max_temp: setM[cRoom.mode].max_temp,
-                            state: room.status,
-                            cost: room.cost
-                        };
-                        promise.resolve(null, reData);
-                    }
-                });
+            //若是为中央空调，直接返回
+            if(room&&room.room_id == 0){
+                promise.resolve(null, room);
+            }
+            else if(room){
+                Room.findOne(
+                    {room_id: 0},
+                    function(err, cRoom){
+                        if(err)
+                            promise.resolve(err, null);
+                        else{
+                            // 对要返回的数据reData进行处理
+                            var reData = {
+                                room_id: room.room_id,
+                                mode: room.mode,
+                                temp: room.temp,
+                                target: cRoom.target_temp,
+                                speed: cRoom.speed,
+                                min_temp: setM[cRoom.mode].min_temp,
+                                max_temp: setM[cRoom.mode].max_temp,
+                                state: room.status,
+                                cost: room.cost,
+                                fee: room.fee
+                            };
+                            promise.resolve(null, reData);
+                        }
+                    });
             }else{
-            Room.findOne(
-                {room_id: 0},
-                function(err, cRoom){
-                    if(err)
-                        promise.resolve(err, null);
-                    else{
-                        data.target_temp=cRoom.target_temp;
-                        data.mode = cRoom.mode;
-                        console.log("switch in: "+data);
-                        Room.create(data, function(err, room){
-                            if(err){
-                                promise.resolve(err, null);
-                            }else{
-                                promise.resolve(null, room);
-                            }});
-                    }
-                });
+                Room.findOne(
+                    {room_id: 0},
+                    function(err, cRoom){
+                        if(err)
+                            promise.resolve(err, null);
+                        else{
+                            data.target_temp=cRoom.target_temp;
+                            data.mode = cRoom.mode;
+                            data.fee = cRoom.fee;
+                            data.cost = 0;
+                            console.log("switch in: "+data);
+                            Room.create(data, function(err, room){
+                                if(err){
+                                    promise.resolve(err, null);
+                                }else{
+                                    promise.resolve(null, room);
+                                }});
+                        }
+                    });
             }
     });
     return promise;
@@ -198,7 +205,12 @@ model.setRecord = function(data){
         {$set: {
                 end_time: new Date().getTime(),
                 end_temp: data.end_temp,
-                power: data.power}},
+                power: data.power,
+                changeTempCount: data.changeTempCount,
+                changeSpeedCount: data.changeSpeedCount,
+                scheduleCount: data.scheduleCount,
+                serveTime: data.serveTime
+            }},
         {safe: true, upsert: true, new : true},
         function(err, record){
         if(err){
@@ -225,7 +237,7 @@ model.getPriority = function(data){
                         else{
                             var reData = {
                                 cost: room.cost,
-                                priority: (room.ctime - record.start_time)*0.0000001 + room.speed,
+                                priority: (room.speed+1)*10 - record.serveTime*0.00000001,
                                 temp: room.temp,
                                 target: room.target_temp,
                                 speed: room.speed,
@@ -352,19 +364,71 @@ model.genReport = function(opt){
 
     var promise = new mongoose.Promise();
     Record.find(
-        {end_time: {$gte: beginDate}},
+        {start_time: {$gte: beginDate}},
         function(err, records) {
             if(err)
                 promise.resolve(err, null);
-            else
-                promise.resolve(null, records);
+            else{
+                //显示
+                    /*报表内容：
+                        1.各房间占用中央空调的时长
+                        2.各房间所消费的费用
+                        3.各房间开关次数
+                        4.各房间温度调节的次数
+                        5.各房间风速调节的次数
+                        6.各房间被调度的次数
+                    */
+
+                Room.findOne({room_id: 0}, function(err, data){
+                    if(data){
+                        var roomReport = [];  // 按房间统计
+                        var fee = data.fee;  // TODO:获取费率
+                        var inRoomRep = false;
+                        for(var i=0; i<records.length; i++){
+                            // 房间已经记录
+                            for (var j = 0; j < roomReport.length; j++)
+                            {
+                                if (records[i].room_id == roomReport[j].room_id)
+                                {
+                                    roomReport[j].serveTime += records[i].serveTime;  // 服务总时长
+                                    roomReport[j].cost += fee * records[i].power;   // 消费费用
+                                    roomReport[j].switchCount++;                   // 开关次数
+                                    roomReport[j].changeTempCount += records[i].changeTempCount;    // 温度调节的次数
+                                    roomReport[j].changeSpeedCount += records[i].changeSpeedCount;  // 风速调节的次数
+                                    roomReport[j].scheduleCount += records[i].scheduleCount;        // 被调度的次数
+                                    inRoomRep = true;
+                                    break;
+                                }
+                            }
+                            // 房间未记录
+                            if (inRoomRep == false)
+                            {
+                                roomReport.push({room_id:records[i].room_id,
+                                                 serveTime: records[i].serveTime,
+                                                 cost: fee * records[i].power,
+                                                 switchCount: 1,
+                                                 changeTempCount: records[i].changeTempCount,
+                                                 changeSpeedCount: records[i].changeSpeedCount,
+                                                 scheduleCount: records[i].scheduleCount
+                                                });
+                            }
+                            else
+                            {
+                                inRoomRep = false;
+                            }
+                        }
+                        promise.resolve(null, roomReport);
+                    }
+                });
+            }
         }
     );
     return promise;
 };
 
 
-/* 前台 : 查看账单， 查看详单： */
+
+// 前台：查看账单——room_id,cost
 model.genBill = function(data){
     var promise = new mongoose.Promise();
     Record.find(
@@ -373,17 +437,23 @@ model.genBill = function(data){
             if(err)
                 promise.resolve(err, null);
             else{
-                var temp_cost = 0;
-                for(i=0; i<records.length; i++)
-                    temp_cost += records[i].power;
-                promise.resolve(null, {room_id: data.room_id, cost: temp_cost});
+                Room.findOne({room_id: 0}, function(err, centerData){
+                    if (centerData){
+                        var fee = centerData.fee;
+                        var temp_power = 0;
+                        for(i=0; i<records.length; i++)
+                            temp_power += records[i].power;
+                        promise.resolve(null, {room_id: data.room_id, cost: temp_power*fee});
+                    }
+                });
             }
         }
     );
     return promise;
 };
 
-
+// 前台：查看详单——room_id,power,cost
+// 返回记录：TODO
 model.genDetails = function(data){
     var promise = new mongoose.Promise();
     Record.find(
@@ -392,7 +462,15 @@ model.genDetails = function(data){
             if(err)
                 promise.resolve(err, null);
             else{
-                promise.resolve(null, records);
+                Room.findOne({room_id: 0}, function(err, centerData){
+                    if (centerData){
+                        var fee = centerData.fee;
+                        var temp_power = 0;
+                        for(i=0; i<records.length; i++)
+                            records.cost = records[i].power*fee;
+                        promise.resolve(null, records);
+                    }
+                });
             }
         }
     );

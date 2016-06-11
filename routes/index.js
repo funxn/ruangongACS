@@ -2,7 +2,15 @@ var express = require('express');
 var router = express.Router();
 
 router.get('/', function(req, res){
-    res.render('index');
+    res.render('mainwindow');
+});
+
+router.get('/favicon.ico', function(req, res){
+    res.end('404 error');
+});
+
+router.get('/:id', function(req, res){
+    res.render(req.params.id);
 });
 
 router.get('/room:id', function(req, res){

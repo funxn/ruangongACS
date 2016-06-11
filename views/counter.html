@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Document</title>
+	<title>前台服务员</title>
 </head>
 <style>
 	.title{
@@ -29,7 +29,7 @@
 		text-align:center;
 		vertical-align:middle;
 		line-height:300px;
-		margin-left:100px;	
+		margin-left:100px;
 		padding-top:80px;
     }
     .content-term-cut{
@@ -47,37 +47,68 @@
     #btnLook{
     	width: 120px;
     }
+    .details{
+    	margin-left:250px;
+		display: none;
+    }
+    .bill{
+    	margin-left:250px;
+    	display: none;
+    }
 </style>
-
 <body>
-	<div class="title">
-		<p>前台界面</p>
+	<div class="counter">
+		<div class="title">
+			<p>前台界面</p>
+		</div>
+		<div class="content">
+	        <div class="content-term">
+	            <div class="content-term-cut">
+	            	<form name="roomIdForm" action="./YourAction" method="POST" target="showPage">
+	            		<b>编号:</b>
+	        	    	<input id="showRoomId" type="text"/>
+	        	    </form>
+	            </div>
+	            <div  class="content-term-cut">
+	            	<b>类型:</b>
+	        	    <select class="select">
+	                    <option value="bill">账单</option>
+	                    <option value="detail">详单</option>
+	                </select>
+	            </div>
+	        	<div  class="content-term-cut">
+	        		<input id="btnLook" type="button" value="查看"/>
+	        	</div>
+	        </div>
+		</div>
 	</div>
-	<div class="content">
-        <div class="content-term">
-            <div class="content-term-cut">	
-            	<form name="roomIdForm" action="./YourAction" method="POST" target="showPage">
-            		<b>编号:</b>
-        	    	<input id="showRoomId" type="text"/>
-        	    </form>
-            </div>
-            <div  class="content-term-cut">
-            	<b>类型:</b>
-        	    <select class="select">
-                    <option value="bill">账单</option>
-                    <option value="detail">详单</option>
-                </select>
-            </div>
-        	<div  class="content-term-cut">
-        		<input id="btnLook" type="button" value="查看"/>
-        	</div> 	
-        </div>
+	<div class="bill">
+		<table id="billTbl" border=1>
+			<tr id="billTableTitle">
+				<td>房间编号</td>
+				<td>消费金额</td>
+			</tr>
+			<tr id="billTr">
+				<td id="billTr_td1"></td>
+				<td id="billTr_td2"></td>
+			</tr>
+	    </table>
+	</div>
+	<div class="details">
+		<table id="detailsTbl" border=1>
+			<tr id="detailsTableTitle">
+				<td>房间编号</td>
+				<td>服务时长(秒)</td>
+				<td>功耗</td>
+				<td>消费的费用</td>
+			</tr>
+	    </table>
 	</div>
 </body>
 
 <script type="text/javascript" src="js/jquery.min.js"></script>
 <script language=javascript>
-	var host = "http://10.8.175.114:3000/room"; 
+	var host = "http://localhost:3000/counter";
 	$('#btnLook').click(function() {
 		var roomIdInput = window['roomIdForm'];
 		var roomId = roomIdInput.showRoomId.value;
@@ -87,8 +118,8 @@
 		}
 		else {
 			//跳转页面，显示账单或详单信息
-			if ($('#select').val() == "bill") {
-				//选择账单
+			if ($('.select').val() == "bill") {
+				//选择账单room_id,cost
 				var data_bill = {
 					room_id: roomId
 				};
@@ -100,17 +131,18 @@
 						alert(data);
 						var getData = JSON.parse(data);
 						if (getData.code != 0) {
-							
+							$('.counter').hide();  //隐藏查看报表界面
+							$('.bill').show();     //显示账单
+							addBillTbl(getData.data.room_id, getData.data.cost);
 						}
-						//显示详单??????????????????
 					}
 					);
 			}
 			else {
-				//选中详单
+				//选中详单 room_id ,cost,power
 				var data_detail = {
 					room_id: roomId
-				}; 
+				};
 				$.post(
 					host+"/genDetails",
 					JSON.stringify(data_detail),
@@ -118,13 +150,39 @@
 						//
 						alert(data);
 						var getData = JSON.parse(data);
-						//跳转页面或直接显示详单????????????????????????
+						if (getData.code != 0) {
+							$('.counter').hide();  //隐藏查看报表界面
+							$('.bill').show();     //显示账单
+							$('.details').show();  //显示详单
+							var datas = getData.data;
+			    			for (var i = datas.length - 1; i >= 0; i--) {
+								addRowDetailsTbl(datas[i].room_id, (datas[i].end_time-datas[i].start_time)/1000, datas[i].power, datas[i].power*1);
+							}
+						}
 					}
 					);
 			}
-			
 		}
 	});
+
+	function addBillTbl(roomID,cost) {
+		$('#billTr_td1').text(roomID);
+		$('#billTr_td2').text(cost);
+	}
+	function addRowDetailsTbl(roomID,serveTime,power,cost) {
+		//添加一行
+		var newTr = detailsTbl.insertRow();
+		//添加四列
+		var newTd0 = newTr.insertCell();
+		var newTd1 = newTr.insertCell();
+		var newTd2 = newTr.insertCell();
+		var newTd3 = newTr.insertCell();
+		//设置列内容和属性
+		newTd0.innerText = roomID;
+		newTd1.innerText= serveTime;
+		newTd2.innerText= power;
+		newTd3.innerText= cost;
+	}
 </script>
 
 </html>

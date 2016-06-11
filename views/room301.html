@@ -115,6 +115,7 @@
     var STATE_OFF = 0;
     var STATE_ON = 1;
     var STATE_WAIT = 2;     // 待机：本地调控
+    var STATE_SCHEDULE = 3; // 调度中
     var MODE_COLD = 0;      // 制冷模式
     var MODE_HOT = 1;       // 制热模式
     var SPEED_LOW = 0;
@@ -144,6 +145,8 @@
         }
         else if (state == STATE_WAIT) {
             return '待机';
+        }else if(state == STATE_SCHEDULE){
+            return '调度中'
         }
     }
     function toShowSpeed(speed) {
@@ -216,10 +219,11 @@
 
                 var data = {
                     room_id :ROOM_ID,
-                    temp: temp
+                    temp: temp,
+                    speed: toGetSpeed()
                 };
                 $.post(
-                    host+"/changed",
+                    host+"/run",
                     JSON.stringify(data),
                     function(data,status){
                         alert(data);

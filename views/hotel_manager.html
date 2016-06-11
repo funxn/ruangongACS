@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Document</title>
+	<title>酒店管理员</title>
 </head>
 <style>
 	.title{
@@ -29,16 +29,16 @@
 		text-align:center;
 		vertical-align:middle;
 		line-height:300px;
-		margin-left:100px;	
+		margin-left:100px;
 		padding-top:80px;
     }
     .content-term-cut{
         width: 300px;
-		height: 100px;
+		height: 150px;
 		background: #ADD8E6;
 		text-align:center;
 		vertical-align:middle;
-		line-height:100px;
+		line-height:150px;
     }
     .select{
     	width: 175px;
@@ -47,36 +47,60 @@
     #btnLook{
     	width: 120px;
     }
+    .report{
+    	margin-left:250px;
+		display:none;
+    }
 </style>
 
 <body>
-	<div class="title">
-		<p>酒店管理员界面</p>
+	<div class="hotel_manager">
+		<div class="title">
+			<p>酒店管理员界面</p>
+		</div>
+		<div class="content">
+	        <div class="content-term">
+	            <div  class="content-term-cut">
+	            	<b>类型:</b>
+	        	    <select class="select">
+	                    <option value="daily">日报表</option>
+	                    <option value="weekly">周报表</option>
+	                    <option value="monthly">月报表</option>
+	                </select>
+	            </div>
+	        	<div  class="content-term-cut">
+	        		<input id="btnLook" type="button" value="查看报表"/>
+	        	</div>
+	        </div>
+		</div>
 	</div>
-	<div class="content">
-        <div class="content-term">
-            <div  class="content-term-cut">
-            	<b>类型:</b>
-        	    <select class="select">
-                    <option value="daily">日报表</option>
-                    <option value="weekly">周报表</option>
-                    <option value="monthly">月报表</option>
-                </select>
-            </div>
-            <div class="content-term-cut">
-            	<b>时间:</b>
-        	    <input id="showRoomTd" type="text"/>
-            </div>
-        	<div  class="content-term-cut">
-        		<input id="btnLook" type="button" value="查看报表"/>
-        	</div> 	
-        </div>
+	<div class="report">
+		<table id="testTbl" border=1>
+			<tr id="tableTitle">
+				<td>房间编号</td>
+				<td>各房间运行的时长</td>
+				<td>消费的费用</td>
+				<td>开关次数</td>
+				<td>温度调节次数</td>
+				<td>风速调节次数</td>
+				<td>房间被调度的次数</td>
+			</tr>
+	    </table>
 	</div>
 </body>
 
 <script type="text/javascript" src="js/jquery.min.js"></script>
 <script>
-	var host = "http://10.8.175.114:3000/room";
+    /*报表内容：
+    	1.房间编号
+    	2.各房间占用中央空调的时长 --各房间本次运行的时长#
+    	3.各房间所消费的费用#
+    	4.各房间开关次数#
+    	5.各房间温度调节的次数
+    	6.各房间风速调节的次数
+    	7.各房间被调度的次数
+    */
+	var host = "http://localhost:3000/hotel";
 	$('#btnLook').click(function(){
 		var selectVal = $('select').val();
 		if(selectVal == "daily") {
@@ -86,17 +110,17 @@
 					alert(data);
 					var getData = JSON.parse(data);
 					if (getData.code != 0) {
-
+						$('.hotel_manager').hide();
+						$('.report').show();
+						var datas = getData.data;
+		    			for (var i = datas.length - 1; i >= 0; i--) {
+							addRow(datas[i].room_id, datas[i].serveTime, datas[i].cost,
+		    				   datas[i].switchCount, datas[i].changeTempCount,
+		    				   datas[i].changeSpeedCount, datas[i].scheduleCount);
+						}
 					}
 					//显示
-					/*报表内容：
-						1.各房间占用中央空调的时长
-						2.各房间所消费的费用
-						3.各房间开关次数
-						4.各房间温度调节的次数
-						5.各房间风速调节的次数
-						6.各房间被调度的次数
-					*/
+
 				}
 			);
 		}
@@ -107,6 +131,17 @@
 					alert(data);
 					var getData = JSON.parse(data);
 					//显示????????????????????????
+					if (getData.code != 0) {
+						$('.hotel_manager').hide();
+						$('.report').show();
+						var datas = getData.data;
+		    			for (var i = datas.length - 1; i >= 0; i--) {
+							addRow(datas[i].room_id, datas[i].serveTime, datas[i].cost,
+		    				   datas[i].switchCount, datas[i].changeTempCount,
+		    				   datas[i].changeSpeedTemp, datas[i].scheduleCount);
+						}
+					}
+
 				}
 			);
 		}
@@ -117,9 +152,42 @@
 					alert(data);
 					var getData = JSON.parse(data);
 					//显示??????????????????????????
+					if (getData.code != 0) {
+						$('.hotel_manager').hide();
+						$('.report').show();
+						var datas = getRoomsData.data;
+						for (var i = datas.length - 1; i >= 0; i--) {
+							addRow(datas[i].room_id, datas[i].serveTime, datas[i].cost,
+		    				   datas[i].switchCount, datas[i].changeTempCount,
+		    				   datas[i].changeSpeedTemp, datas[i].scheduleCount);
+						}
+					}
 				}
 			);
 		}
 	});
+
+	/*动态添加报表行内容*/
+	function addRow(roomID,time,cost,countOnOff,countChangeTemp,countChangeSpeed,countSchedule) {
+		//添加一行
+		var newTr = testTbl.insertRow();
+		//添加七列
+		var newTd0 = newTr.insertCell();
+		var newTd1 = newTr.insertCell();
+		var newTd2 = newTr.insertCell();
+		var newTd3 = newTr.insertCell();
+		var newTd4 = newTr.insertCell();
+		var newTd5 = newTr.insertCell();
+		var newTd6 = newTr.insertCell();
+		//设置列内容和属性
+		newTd0.innerText = roomID;
+		newTd1.innerText= time;
+		newTd2.innerText= cost;
+		newTd3.innerText= countOnOff;
+		newTd4.innerText= countChangeTemp;
+		newTd5.innerText= countChangeSpeed;
+		newTd6.innerText= countSchedule;
+	}
+
 </script>
 </html>

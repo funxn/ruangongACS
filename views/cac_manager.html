@@ -106,6 +106,8 @@
 		width: 324px;
 		height: 300px;
 		background: #FFDAB9;
+		text-align:center;
+		vertical-align:middle;
 		line-height:300px;
 	}
 	#btnCACOnOff{
@@ -339,7 +341,7 @@
 		    	</div>
 		    	<div class="cacContent">
 		    		<div class="cacFeeTitle">
-		    			<b>费率：</b>
+		    			<b></b>
 		    		</div>
 		    		<b id="cacFee"></b>
 		    	</div>
@@ -351,7 +353,7 @@
 	</div>
 </body>
 
-<script type="text/javascript" src="../public/js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.min.js"></script>
 <script type="text/javascript">
 
     var STATE_OFF = 0;
@@ -361,8 +363,14 @@
     var MODE_HOT = 1;
     var SPEED_LOW = 0;
     var SPEED_M = 1;
-    var SPEED_HIGH = 2;
+    var SPEED_HIGH = 2
+    var STATE_SCHEDULE = 3; // 调度中;
     var host = "http://localhost:3000/center";
+    var ROOM = 0;
+    var ROOM1 = 301;
+    var ROOM2 = 302;
+    var ROOM3 = 303;
+    var ROOM4 = 304;
 
     //判断类型显示汉字或得到类型变量
 	function toShowMode(mode) {
@@ -382,7 +390,9 @@
     	}
     	else if (state == STATE_WAIT) {
     		return '待机';
-    	}
+        }else if(state == STATE_SCHEDULE){
+            return '调度中'
+        }
     }
     function toShowSpeed(speed) {
     	if (speed == SPEED_LOW) {
@@ -457,6 +467,52 @@
                             $.get(host+"/checkAir", function(data){
                                 if(data.code!=0){
                                     alert(data);
+    								var getRoomsData = JSON.parse(data);
+		    						var rooms = getRoomsData.rooms;
+		    						var count = rooms.length;
+		    						alert(count);
+		    						for(var i = 0; i < count;i++) {
+		    							if(rooms[i].room_id == ROOM1) {
+		    								$('#room1-Id').text(rooms[i].room_id);
+		            						$('#room1-state').text(toShowState(rooms[i].status));
+		            						$('#room1-currentTemp').text(rooms[i].temp.toFixed(2));
+		           							$('#room1-speed').text(toShowSpeed(rooms[i].speed));
+		            						$('#room1-aimTemp').text(rooms[i].target_temp.toFixed(2));
+		            						$('#room1-consume').text(rooms[i].cost.toFixed(2));
+		    							}
+		    							else if(rooms[i].room_id == ROOM2) {
+		    								$('#room2-Id').text(rooms[i].room_id);
+		            						$('#room2-state').text(toShowState(rooms[i].status));
+		            						$('#room2-currentTemp').text(rooms[i].temp.toFixed(2));
+		           							$('#room2-speed').text(toShowSpeed(rooms[i].speed));
+		            						$('#room2-aimTemp').text(rooms[i].target_temp.toFixed(2));
+		            						$('#room2-consume').text(rooms[i].cost.toFixed(2));
+
+		    							}
+		    							else if(rooms[i].room_id == ROOM3) {
+		    								$('#room3-Id').text(rooms[i].room_id);
+		            						$('#room3-state').text(toShowState(rooms[i].status));
+		            						$('#room3-currentTemp').text(rooms[i].temp.toFixed(2));
+		           							$('#room3-speed').text(toShowSpeed(rooms[i].speed));
+		            						$('#room3-aimTemp').text(rooms[i].target_temp.toFixed(2));
+		            						$('#room3-consume').text(rooms[i].cost.toFixed(2));
+
+		    							}
+		    							else if(rooms[i].room_id == ROOM4) {
+		    								$('#room4-Id').text(rooms[i].room_id);
+		            						$('#room4-state').text(toShowState(rooms[i].status));
+		            						$('#room4-currentTemp').text(rooms[i].temp.toFixed(2));
+		           							$('#room4-speed').text(toShowSpeed(rooms[i].speed));
+		            						$('#room4-aimTemp').text(rooms[i].target_temp.toFixed(2));
+		            						$('#room4-consume').text(rooms[i].cost.toFixed(2));
+
+		    							}
+		    							else if(rooms[i].room_id == ROOM){
+		    								//主机
+		    								$('#cacState').text(toShowState(rooms[i].status));
+		            						$('#cacMode').text(toShowMode(rooms[i].mode));
+		    							}
+    								}
                                 }else{
                                     alert(data);
                                 }
@@ -472,13 +528,16 @@
     	else {
     	    //关机
     		var data_off = {
-
+    			room_id: 0,
+    			state: STATE_OFF,
+    		    //temp: -1
     		};
     		$.post(
     			host+"/switch",
     			JSON.stringify(data_off),
     			function(data,status) {
     				alert(data);
+    				clearInterval(t);    //关闭定时发送请求
     				var getData = JSON.parse(data);
     			}
     			);

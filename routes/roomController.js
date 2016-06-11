@@ -5,6 +5,7 @@ var model = require('../model/ops');  // ops数据库操作
 var sockTag = [];  // room_id,priority,
 var recordId = [];
 var canrunFlag = [];
+var imRecord = [];
 
 
 // 宏
@@ -42,8 +43,14 @@ roomController.post('/handshake',function(req,res){
                     // 添加一条记录和一个操作到数据库
                     model.newRecord(data).then(function(data){
                         recordId[handshakeData.room_id] = data.record_id;
+                        imRecord[data.record_id] = {};
+                        imRecord[data.record_id].changeTempCount = 0;
+                        imRecord[data.record_id].changeSpeedCount = 0;
+                        imRecord[data.record_id].scheduleCount = 0;
+                        imRecord[data.record_id].serveTime = 0;
+                        imRecord[data.record_id].serveStartTime = 0;
                     },function(err){console.log("handshake newRecord error: "+err)});
-                    model.newOperation({room_id: data.room_id, operation: 'handshake'});
+                    // model.newOperation({room_id: data.room_id, operation: 'handshake'});
                     model.initSetting(data).then(function(redata){
                         res.end(JSON.stringify({code: 1, data: redata}));
                     },function(err){JSON.stringify({code:0, err:"initSetting error: "+err});});
@@ -56,8 +63,14 @@ roomController.post('/handshake',function(req,res){
                     // 添加一条记录和一个操作到数据库
                     model.newRecord(data).then(function(data){
                         recordId[handshakeData.room_id] = data.record_id;
+                        imRecord[data.record_id] = {};
+                        imRecord[data.record_id].changeTempCount = 0;
+                        imRecord[data.record_id].changeSpeedCount = 0;
+                        imRecord[data.record_id].scheduleCount = 0;
+                        imRecord[data.record_id].serveTime = 0;
+                        imRecord[data.record_id].serveStartTime = 0;
                     },function(err){console.log("handshake newRecord error: "+err)});
-                    model.newOperation({room_id: data.room_id, operation: 'handshake'});
+                    // model.newOperation({room_id: data.room_id, operation: 'handshake'});
                     model.initSetting(data).then(function(redata){
                         res.end(JSON.stringify({code: 1, data: redata}));
                     },function(err){JSON.stringify({code:0, err:"initSetting error: "+err});});
@@ -90,13 +103,27 @@ roomController.post('/shutdown',function(req,res){
         model.switch(shutdownData).then(function(data){
             res.end(JSON.stringify({code: 1, data: data}));
             // 每次有修改都要set一下对应的数据库的记录，包括关机
-            model.setRecord({record_id: recordId[data.room_id], end_temp: shutdownData.temp, power: data.cost});
+            var thisRecord = imRecord[recordId[data.room_id]];
+            // 累计时间
+            thisRecord.serveTime += new Date().getTime() - thisRecord.serveStartTime;
+            model.setRecord({
+                record_id: recordId[data.room_id],
+                end_temp: shutdownData.temp,
+                power: data.cost,
+                changeTempCount: thisRecord.changeTempCount,
+                changeSpeedCount: thisRecord.changeSpeedCount,
+                scheduleCount: thisRecord.scheduleCount,
+                serveTime: thisRecord.serveTime
+            });
+            // @xiaofeng: 不用！！！删除掉临时的imRecord[record_id]项
+            //imRecord.splice(recordId[data.room_id], 1);
             // 删除sockTag, canrunFlag元素
             for(i=0; i<sockTag.length; i++)
                 if(sockTag[i].room_id == shutdownData.room_id){
                     sockTag.splice(i, 1);
                 }
-            canrunFlag.splice(shutdownData, 1);
+            //@xiaofeng: 使用splice应注意！！！，会影响到后面的下标值
+            canrunFlag[shutdownData.room_id] = undefined;
             // 删除房间记录：
             model.delRoom(shutdownData);
         },function(err){ res.end(JSON.stringify({code: 0, err: "handshake Error: "+err})); });
@@ -132,7 +159,13 @@ roomController.post('/run',function(req,res){
         var setData = JSON.parse(postData);    // 解析数据
 
         // 如果当前房间是一个新来的房间：
-        if(typeof(canrunFlag[setData.room_id]) == 'undefined'){
+        // 或者交由自身调度后完成的状态标志-1
+        if(typeof(canrunFlag[setData.room_id]) == 'undefined' || canrunFlag[setData.room_id] == -1){
+            if(canrunFlag[setData.room_id] == -1){
+                model.changedTemp(setData).then(function(){},
+                    function(err){res.end(JSON.stringify({code:0, err:"changedTemp error: "+err}))});
+                canrunFlag[setData.room_id] = true;
+            }
             model.getPriority({room_id: setData.room_id, record_id: recordId[setData.room_id]}).then(function(data){
                 // 当前空调进入调度队列
                 var exitFlag = false;
@@ -145,6 +178,7 @@ roomController.post('/run',function(req,res){
                     if(sockTag.length<3){
                         // sockTag.push会影响sockTag.length的值，此处必须放到里面
                         sockTag.push({room_id:data.room_id, priority: data.priority});
+                        imRecord[recordId[data.room_id]].serveStartTime = new Date().getTime();
                         canrunFlag[data.room_id] = true;
                         data.state = 1;
                         model.setState(data);
@@ -161,10 +195,16 @@ roomController.post('/run',function(req,res){
                             // 如果新来的空调成功进入运行队列，则
                             if(sockTag[i].room_id == data.room_id){
                                canrunFlag[data.room_id] = true;
+                               imRecord[recordId[data.room_id]].serveStartTime = new Date().getTime();
                                data.state = 1;
                                model.setState(data);
                                // 被换出的房间出队列
                                canrunFlag[sockTag[3].room_id] = false;
+                               // 存储被调出的房间的状态：
+                               model.setState({room_id: sockTag[3].room_id, state: 3})
+                               imRecord[recordId[sockTag[3].room_id]].scheduleCount++;
+                               imRecord[recordId[sockTag[3].room_id]].serveTime = new Date().getTime()
+                                - imRecord[recordId[sockTag[3].room_id]].serveStartTime;
                                model.setState({room_id: sockTag[3].room_id, state: 2});
                                // 空调进入运行态
                                res.end(JSON.stringify({code:1, data: data}));
@@ -182,6 +222,26 @@ roomController.post('/run',function(req,res){
         // code: 1 正常运行态， code: 3 在调度处排队， code: -1 调度完成
         else{
             model.getPriority({room_id: setData.room_id, record_id: recordId[setData.room_id]}).then(function(data){
+                // 每次执行数据变化前重新排列优先级：
+                sockTag.sort(by("priority"));
+                //只有当sockTag.length大于3时才需要调度
+                if(sockTag.length>3)
+                    for(var i = 0; i < 3; i++)
+                        // 如果新来的空调成功进入运行队列，则
+                        if(sockTag[i].room_id == data.room_id){
+                           canrunFlag[data.room_id] = true;
+                           imRecord[recordId[data.room_id]].serveStartTime = new Date().getTime();
+                           data.state = 1;
+                           model.setState(data);
+                           // 被换出的房间出队列
+                           canrunFlag[sockTag[3].room_id] = false;
+                           // 存储被调出的房间的状态：
+                           model.setState({room_id: sockTag[3].room_id, state: 3})
+                           imRecord[recordId[sockTag[3].room_id]].scheduleCount++;
+                           imRecord[recordId[sockTag[3].room_id]].serveTime = new Date().getTime()
+                            - imRecord[recordId[sockTag[3].room_id]].serveStartTime;
+                           model.setState({room_id: sockTag[3].room_id, state: 2});
+                        }
                 for(i=0; i<sockTag.length; i++){
                     if(sockTag[i].room_id == data.room_id){
                         // 如果处在运行态：
@@ -189,13 +249,19 @@ roomController.post('/run',function(req,res){
                             var setDataNext = changeValue(data);
 
                             if(Math.abs(setDataNext.temp - setDataNext.target) <= 0.05){
+                                // 记录下当前有的服务时间：
+                                imRecord[recordId[sockTag[i].room_id]].serveTime += new Date().getTime() - imRecord[recordId[sockTag[i].room_id]].serveStartTime;
+                                // 删除运行态的该房间
                                 sockTag.splice(i,1);
                                 //让队列的下一个进入运行态：
                                 if(sockTag.length >= 3){
+                                    imRecord[recordId[sockTag[2].room_id]].serveStartTime = new Date().getTime();
                                     canrunFlag[sockTag[2].room_id] = true;
+                                    // 存储变化后的状态：
+                                    model.setState({room_id: sockTag[2].room_id, state: 1})
                                 }
-                                // 转为待机状态
-                                canrunFlag[setDataNext.room_id] = false;
+                                // 转为本地调度状态标志
+                                canrunFlag[setDataNext.room_id] = -1;
                                 // 返回值为待机态code = -1
                                 // 房间状态改为待机：
                                 setDataNext.state = 2;
@@ -234,6 +300,7 @@ roomController.post('/setTemp', function(req, res){
         console.log("从客户端发过来的数据是："+postData);
         var setData = JSON.parse(postData);    // 解析数据
         model.setTemp(setData).then(function(data){
+            imRecord[recordId[setData.room_id]].changeTempCount++;
             res.end(JSON.stringify({code:1, data: data}));
         }, function(err){ res.end(JSON.stringify({code:0, err: err}))});
     });
@@ -252,6 +319,14 @@ roomController.post('/setSpeed', function(req, res){
         console.log("从客户端发过来的数据是："+postData);
         var setData = JSON.parse(postData);    // 解析数据
         model.setSpeed(setData).then(function(data){
+            imRecord[recordId[setData.room_id]].changeSpeedCount++;
+            model.getPriority({room_id: setData.room_id, record_id: recordId[setData.room_id]}).then(function(data){
+                for(i=0; i<sockTag.length; i++){
+                    if(sockTag[i].room_id == setData.room_id){
+                        sockTag[i].priority = data.priority;
+                    }
+                }
+            });
             res.end(JSON.stringify({code:1, data: data}));
         }, function(err){ res.end(JSON.stringify({code:0, err: err}))});
     });
@@ -260,66 +335,71 @@ roomController.post('/setSpeed', function(req, res){
 // 房间空调调度结束，交由中央空调调度开始
 // view: room_id, temp
 // model: result = "ack"
-roomController.post('/changed',function(req,res){
-    res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
-    var postData = '';
-    req.setEncoding('utf8');
-    // 监听data事件：room_id, temp
-    req.addListener('data', function(postDataChunk){
-        postData += postDataChunk;
-    });
-    // 监听end事件：代表post数据结束
-    req.addListener('end', function(){
-        var changedData = JSON.parse(postData);    // 解析数据
+// roomController.post('/changed',function(req,res){
+//     res.writeHead(200, {'Access-Control-Allow-Origin': '*'});
+//     var postData = '';
+//     req.setEncoding('utf8');
+//     // 监听data事件：room_id, temp
+//     req.addListener('data', function(postDataChunk){
+//         postData += postDataChunk;
+//     });
+//     // 监听end事件：代表post数据结束
+//     req.addListener('end', function(){
+//         var changedData = JSON.parse(postData);    // 解析数据
 
-        model.changedTemp(changedData).then(function(){},
-            function(err){res.end(JSON.stringify({code:0, err:"changedTemp error: "+err}))});
-        model.getPriority({room_id: changedData.room_id, record_id: recordId[changedData.room_id]}).then(function(data){
-            // 当前空调进入调度队列
-            var exitFlag = false;
-            // 原sockTag中不存在的，才添加： 为了防止计时较短时多次添加sockTag的情况
-            for(i=0; i<sockTag.length; i++)
-                if(sockTag[i].room_id == data.room_id)
-                    exitFlag = true;
-            if(!exitFlag){
-                //若运作队列中有小于3个的房间空调
-                if(sockTag.length<3){
-                    sockTag.push({room_id:data.room_id, priority: data.priority});
-                    model.setState(data);
-                    canrunFlag[data.room_id] = true;
-                    data.state = 1;
-                    model.setState(data);
-                    // 当前空调直接进入运行态，服务器立即予以响应，但是不修改温度值
-                    res.end(JSON.stringify({code:1, data: data}));
-                }
-                // 否则
-                else{
-                    sockTag.push({room_id:data.room_id, priority: data.priority});
-                    sockTag.sort(by("priority"));
+//         model.changedTemp(changedData).then(function(){},
+//             function(err){res.end(JSON.stringify({code:0, err:"changedTemp error: "+err}))});
+//         model.getPriority({room_id: changedData.room_id, record_id: recordId[changedData.room_id]}).then(function(data){
+//             // 当前空调进入调度队列
+//             var exitFlag = false;
+//             // 原sockTag中不存在的，才添加： 为了防止计时较短时多次添加sockTag的情况
+//             for(i=0; i<sockTag.length; i++)
+//                 if(sockTag[i].room_id == data.room_id)
+//                     exitFlag = true;
+//             if(!exitFlag){
+//                 //若运作队列中有小于3个的房间空调
+//                 if(sockTag.length<3){
+//                     sockTag.push({room_id:data.room_id, priority: data.priority});
+//                     model.setState(data);
+//                     imRecord[recordId[data.room_id]].serveStartTime = new Date().getTime();
+//                     canrunFlag[data.room_id] = true;
+//                     data.state = 1;
+//                     model.setState(data);
+//                     // 当前空调直接进入运行态，服务器立即予以响应，但是不修改温度值
+//                     res.end(JSON.stringify({code:1, data: data}));
+//                 }
+//                 // 否则
+//                 else{
+//                     sockTag.push({room_id:data.room_id, priority: data.priority});
+//                     sockTag.sort(by("priority"));
 
-                    for(var i = 0; i < 3; i++)
-                    {
-                        // 如果新来的空调成功进入运行队列，则
-                        if(sockTag[i].room_id == data.room_id){
-                           canrunFlag[data.room_id] = true;
-                           data.state = 1;
-                           model.setState(data);
-                           // 被换出的房间出队列
-                           canrunFlag[sockTag[3].room_id] = false;
-                           model.setState({room_id: sockTag[3].room_id, state: 2});
-                           // 空调进入运行态
-                           res.end(JSON.stringify({code:1, data: data}));
-                        }
-                        else{
-                            canrunFlag[data.room_id] = false;
-                            res.end(JSON.stringify({code:3, data: data}));
-                        }
-                    }
-                }
-            }
-        });
-    });
-});
+//                     for(var i = 0; i < 3; i++)
+//                     {
+//                         // 如果新来的空调成功进入运行队列，则
+//                         if(sockTag[i].room_id == data.room_id){
+//                            canrunFlag[data.room_id] = true;
+//                            data.state = 1;
+//                            model.setState(data);
+//                            imRecord[recordId[data.room_id]].serveStartTime = new Date().getTime();
+//                            // 被换出的房间出队列
+//                            canrunFlag[sockTag[3].room_id] = false;
+//                            imRecord[recordId[sockTag[3].room_id]].scheduleCount++;
+//                            imRecord[recordId[sockTag[3].room_id]].serveTime = new Date().getTime()
+//                             - imRecord[recordId[sockTag[3].room_id]].serveStartTime;
+//                            model.setState({room_id: sockTag[3].room_id, state: 2});
+//                            // 空调进入运行态
+//                            res.end(JSON.stringify({code:1, data: data}));
+//                         }
+//                         else{
+//                             canrunFlag[data.room_id] = false;
+//                             res.end(JSON.stringify({code:3, data: data}));
+//                         }
+//                     }
+//                 }
+//             }
+//         });
+//     });
+// });
 
 
 // 接收房间空调请求：查看费用
@@ -378,6 +458,7 @@ function changeValue(data){
 
 //by函数接受一个成员名字符串做为参数
 //并返回一个可以用来对包含该成员的对象数组进行排序的比较函数
+// @xiaofeng： 调整了排序为逆序排序
 var by = function(name){
     return function(o, p){
         var a, b;
@@ -388,9 +469,9 @@ var by = function(name){
                 return 0;
             }
             if (typeof a === typeof b) {
-                return a < b ? -1 : 1;
+                return a > b ? -1 : 1;
             }
-            return typeof a < typeof b ? -1 : 1;
+            return typeof a > typeof b ? -1 : 1;
         }
         else {
             throw ("error");

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Document</title>
+	<title>中央空调配置</title>
 </head>
 
 <style>
@@ -19,13 +19,13 @@
         width: 500px;
     	height: 500px;
         background: #FAFAD2;
-		margin-left:250px;	
+		margin-left:250px;
     }
     .content-center{
         width: 300px;
     	height: 400px;
         background: #FAFAD2;
-		margin-left:100px;	
+		margin-left:100px;
 		padding-top:20px;
     }
     .content-center-cut{
@@ -54,9 +54,9 @@
 <body>
 	<div class="title">
 		<font>中央空调配置界面</font>
-	</div>	
+	</div>
 	<div class="content">
-		<div class="content-center"> 
+		<div class="content-center">
 			<div class="content-center-cut">
 				<font>工作模式:</font>
 				<select id="modeSelect">
@@ -94,10 +94,10 @@
 <script language=javascript>
     var MODE_COLD = 0;
     var MODE_HOT = 1;
-    var host = "http://10.8.57.137:3000/center";
+    var host = "http://localhost:3000/center";
 	$('#btnOK').click(function() {
-        if (confirm("确定要设置吗？")) { 
-            var tempRangeInput = window['tempRangeForm']; 
+        if (confirm("确定要设置吗？")) {
+            var tempRangeInput = window['tempRangeForm'];
             var defaultTempInput = window['defaultTempForm'];
             var feeInput = window['feeForm'];
 
@@ -107,43 +107,43 @@
             var feeVal = feeInput.fee.value;
             //alert("已进入点击响应函数");
 
-            if (!temp_low || isNaN(temp_low)) { 
-                alert('请输入温度下界'); 
-                tempRangeInput.focus(); 
-                return false; //返回不提交 
-            } 
+            if (!temp_low || isNaN(temp_low)) {
+                alert('请输入温度下界');
+                tempRangeInput.focus();
+                return false; //返回不提交
+            }
             else if(!temp_high || isNaN(temp_high)){
-                alert('请输入温度上界'); 
-                tempRangeInput.focus(); 
-                return false; //返回不提交   
+                alert('请输入温度上界');
+                tempRangeInput.focus();
+                return false; //返回不提交
             }
             else if(temp_low >= temp_high) {
                 alert('输入范围不正确，请重新输入！');
-                tempRangeInput.focus(); 
-                return false; //返回不提交 
+                tempRangeInput.focus();
+                return false; //返回不提交
             }
             else if (!defaultVal || isNaN(defaultVal)) {
                 alert('请输入缺省目标温度');
-                defaultTempInput.focus(); 
+                defaultTempInput.focus();
                 return false; //返回不提交
             }
             else if (defaultVal > temp_high || defaultVal < temp_low) {
                 alert('您输入的缺省目标温度不在温控范围内，请重新输入！');
-                defaultTempInput.focus(); 
+                defaultTempInput.focus();
                 return false; //返回不提交
             }
             else if (!feeVal || isNaN(feeVal)) {
                 alert('请输入计费费率');
-                feeInput.focus(); 
-                return false; //返回不提交 
+                feeInput.focus();
+                return false; //返回不提交
             }
-            else { 
+            else {
                 var modeVal;
                 //保存配置信息
                 if($('#modeSelect').val() == "cold") {
                     //选中制冷
                     modeVal = MODE_COLD;
-                } 
+                }
                 else {
                     //选中制暖
                     modeVal = MODE_HOT;
@@ -163,10 +163,10 @@
                         var getData = JSON.parse(data);
                         if (getData.code != 0) {
                             alert('设置成功，点击确认跳转主界面');
-                            //window.location.href = "cac_manager.html";
+                            window.location.href = "cac_manager.html";
                         }
                     }
-                    );               
+                    );
             }
         }
 	});

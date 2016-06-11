@@ -7,8 +7,8 @@ var app = express();
 var routes = require('./routes/index.js');
 var centerController = require('./routes/centerController');   // 中央空调管理员控制器
 var roomController = require('./routes/roomController');	   // 房间空调控制器
-// var counterController = require('./routes/counterController'); // 前台控制器
-// var hotelController = require('./routes/hotelController');     // 酒店管理员
+var counterController = require('./routes/counterController'); // 前台控制器
+var hotelController = require('./routes/hotelController');     // 酒店管理员
 
 var mongoose = require('./model/db.js');
 
@@ -25,8 +25,8 @@ app.set('view engine', 'html');
 app.use('/', routes);
 app.use('/center', centerController);
 app.use('/room',roomController);
-// app.use('/counter',counterController);
-// app.use('/hotel',counterController);
+app.use('/counter',counterController);
+app.use('/hotel',hotelController);
 
 
 
